@@ -8,6 +8,10 @@ const historyCard = document.getElementById("historyCard");
 const paymentForm = document.getElementById("paymentForm");
 const historyTable = document.getElementById("paymentHistory");
 
+const paymentDate = document.getElementById("paymentDate");
+const referenceNo = document.getElementById("referenceNo");
+const amountPaid = document.getElementById("amountPaid");
+
 let selectedLearner = null;
 let activeTerm = null;
 
@@ -15,25 +19,39 @@ let activeTerm = null;
    LOAD ACTIVE TERM
 =========================== */
 async function loadActiveTerm() {
-  const { data } = await supabase
+  const { data: termData, error } = await supabase
     .from("terms")
     .select("*")
     .eq("active", true)
     .single();
 
-  activeTerm = data;
+  if (error) {
+    console.error("Error fetching active term:", error);
+    alert("No active term found! Please set an active term in the system.");
+    return null;
+  }
+
+  if (!termData) {
+    alert("No active term found! Please set an active term in the system.");
+    return null;
+  }
+
+  activeTerm = termData;
+  return activeTerm;
 }
-loadActiveTerm();
 
 /* ===========================
    SEARCH LEARNER
 =========================== */
 searchBtn.addEventListener("click", async () => {
   const query = searchInput.value.trim();
-
   if (!query) return;
 
-  const { data } = await supabase
+  // Ensure active term is loaded first
+  await loadActiveTerm();
+  if (!activeTerm) return;
+
+  const { data, error } = await supabase
     .from("learners")
     .select(`
       id,
@@ -45,7 +63,12 @@ searchBtn.addEventListener("click", async () => {
     `)
     .or(`admission_no.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%`)
     .eq("active", true)
-    .single();
+    .maybeSingle(); // Returns null if not found
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
 
   if (!data) {
     alert("Learner not found");
@@ -61,13 +84,15 @@ searchBtn.addEventListener("click", async () => {
    DISPLAY LEARNER & BALANCE
 =========================== */
 async function displayLearnerDetails() {
+  if (!selectedLearner || !activeTerm) return;
+
   // Fetch fees
   const { data: feeData } = await supabase
     .from("fees")
     .select("amount")
     .eq("class_id", selectedLearner.class_id)
     .eq("term_id", activeTerm.id)
-    .single();
+    .maybeSingle();
 
   const totalFees = feeData?.amount || 0;
 
@@ -78,13 +103,13 @@ async function displayLearnerDetails() {
     .eq("learner_id", selectedLearner.id)
     .eq("term_id", activeTerm.id);
 
-  const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
   const balance = totalFees - totalPaid;
 
   learnerDetails.innerHTML = `
     <strong>${selectedLearner.first_name} ${selectedLearner.last_name}</strong><br>
     Adm No: ${selectedLearner.admission_no}<br>
-    Class: ${selectedLearner.classes.name}<br><br>
+    Class: ${selectedLearner.classes?.name || 'N/A'}<br><br>
 
     <strong>Total Fees:</strong> KES ${totalFees.toLocaleString()}<br>
     <strong>Total Paid:</strong> KES ${totalPaid.toLocaleString()}<br>
@@ -105,17 +130,22 @@ async function displayLearnerDetails() {
 paymentForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
+  if (!selectedLearner || !activeTerm) {
+    alert("Please search a learner first!");
+    return;
+  }
+
   const payment = {
     learner_id: selectedLearner.id,
     term_id: activeTerm.id,
     payment_date: paymentDate.value,
     reference_no: referenceNo.value,
-    amount: amountPaid.value
+    amount: Number(amountPaid.value)
   };
 
   const { error } = await supabase
     .from("payments")
-    .insert(payment);
+    .insert([payment]);
 
   if (error) {
     alert(error.message);
@@ -130,16 +160,18 @@ paymentForm.addEventListener("submit", async (e) => {
    LOAD PAYMENT HISTORY
 =========================== */
 async function loadPaymentHistory() {
+  if (!selectedLearner || !activeTerm) return;
+
   historyTable.innerHTML = "";
 
-  const { data } = await supabase
+  const { data: history } = await supabase
     .from("payments")
     .select("*")
     .eq("learner_id", selectedLearner.id)
     .eq("term_id", activeTerm.id)
     .order("payment_date", { ascending: false });
 
-  data.forEach(p => {
+  history?.forEach(p => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${p.payment_date}</td>
