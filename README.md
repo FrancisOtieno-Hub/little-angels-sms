@@ -160,6 +160,3 @@ export const supabase = createClient('<SUPABASE_URL>', '<SUPABASE_KEY>');
 
 This project is **MIT Licensed**. See [LICENSE](LICENSE) for details.
 
-```
-
----
