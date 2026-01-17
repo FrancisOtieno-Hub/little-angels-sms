@@ -49,6 +49,32 @@
     </div>
   </div>
 
+  <div class="card mt-20">
+  <h2>Bulk Learner Upload (Excel)</h2>
+
+  <select id="bulkClassSelect" required>
+    <option value="">Select Class for Upload</option>
+  </select>
+
+  <input type="file" id="excelFile" accept=".xlsx,.csv" />
+
+  <button id="previewBtn">Preview Learners</button>
+  <button id="saveBulkBtn" class="hidden">Save All Learners</button>
+
+  <table id="previewTable" class="hidden mt-20">
+    <thead>
+      <tr>
+        <th>Admission No</th>
+        <th>Name</th>
+        <th>Gender</th>
+        <th>DOB</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+
   <script type="module" src="js/learners.js"></script>
 </body>
 </html>
