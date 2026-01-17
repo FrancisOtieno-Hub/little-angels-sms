@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Term & Fees Setup | Little Angels Academy</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="dashboard">
+
+    <!-- TERM MANAGEMENT -->
+    <div class="card">
+      <h2>Academic Term Management</h2>
+
+      <form id="termForm">
+        <input type="number" id="year" placeholder="Year (e.g. 2026)" required />
+        <select id="term">
+          <option value="1">Term 1</option>
+          <option value="2">Term 2</option>
+          <option value="3">Term 3</option>
+        </select>
+        <button type="submit">Set Active Term</button>
+      </form>
+
+      <p id="activeTerm" class="mt-20"></p>
+    </div>
+
+    <!-- FEES SETUP -->
+    <div class="card">
+      <h2>Fees Per Class</h2>
+
+      <form id="feesForm">
+        <select id="feesClass" required>
+          <option value="">Select Class</option>
+        </select>
+
+        <input type="number" id="feesAmount" placeholder="Fees Amount (KES)" required />
+
+        <button type="submit">Save / Update Fees</button>
+      </form>
+
+      <table class="mt-20">
+        <thead>
+          <tr>
+            <th>Class</th>
+            <th>Fees (KES)</th>
+          </tr>
+        </thead>
+        <tbody id="feesTable"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/fees.js"></script>
+</body>
+</html>
