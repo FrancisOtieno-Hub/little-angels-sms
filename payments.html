@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fee Payments | Little Angels Academy</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="dashboard">
+
+    <!-- SEARCH LEARNER -->
+    <div class="card">
+      <h2>Search Learner</h2>
+      <input type="text" id="searchInput" placeholder="Enter Admission No or Name" />
+      <button id="searchBtn">Search</button>
+
+      <div id="learnerDetails" class="mt-20 hidden"></div>
+    </div>
+
+    <!-- PAYMENT FORM -->
+    <div class="card hidden" id="paymentCard">
+      <h2>Record Fee Payment</h2>
+
+      <form id="paymentForm">
+        <input type="date" id="paymentDate" required />
+        <input type="text" id="referenceNo" placeholder="Reference No (optional)" />
+        <input type="number" id="amountPaid" placeholder="Amount Paid (KES)" required />
+        <button type="submit">Save Payment</button>
+      </form>
+    </div>
+
+    <!-- PAYMENT HISTORY -->
+    <div class="card hidden" id="historyCard">
+      <h2>Payment History</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Ref No</th>
+            <th>Amount (KES)</th>
+          </tr>
+        </thead>
+        <tbody id="paymentHistory"></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/payments.js"></script>
+</body>
+</html>
