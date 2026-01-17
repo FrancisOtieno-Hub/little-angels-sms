@@ -76,3 +76,90 @@ The system is designed for **Play Group, Pre-Primary 1 & 2, and Grade 1 to 9**, 
 ```bash
 git clone https://github.com/<your-username>/little-angels-sms.git
 cd little-angels-sms
+````
+
+2. Install dependencies (if using Node for development):
+
+```bash
+npm install
+```
+
+3. Update Supabase credentials in `js/supabase.js`:
+
+```javascript
+export const supabase = createClient('<SUPABASE_URL>', '<SUPABASE_KEY>');
+```
+
+4. Open `index.html` in your browser (or use `npm run dev` if using a dev server).
+
+---
+
+## Usage
+
+* Navigate the dashboard to access features:
+
+  * **Learners:** Add / view / bulk upload
+  * **Fees:** Set term, class fees, and view payment history
+  * **Payments:** Record payments and view balances
+  * **Receipts:** Generate printable receipts
+  * **Promotion:** Promote or graduate learners
+
+---
+
+## Deployment
+
+* **Frontend / PWA:** Deploy on [Vercel](https://vercel.com/)
+* **Backend / Database:** Host on [Supabase](https://supabase.com/)
+
+**Steps for Vercel:**
+
+1. Connect your GitHub repository.
+2. Set environment variables for Supabase URL & Key.
+3. Deploy and visit your live URL.
+
+---
+
+## Database Structure
+
+* **learners:** id, first_name, last_name, admission_no, gender, date_of_birth, class_id, active, graduated
+* **classes:** id, name, level
+* **terms:** id, year, term, active
+* **fees:** id, class_id, term_id, amount
+* **payments:** id, learner_id, term_id, payment_date, reference_no, amount
+
+---
+
+## PWA Features
+
+* Installable to home screen
+* Offline-ready (service worker caches assets)
+* Fast load times with cached content
+* Works on Android, iOS, Windows desktops
+
+---
+
+## Screenshots
+
+![Dashboard Screenshot](./assets/screenshot-dashboard.png)
+![Fee Payment Screenshot](./assets/screenshot-payments.png)
+![Receipt Screenshot](./assets/screenshot-receipt.png)
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a new branch: `git checkout -b feature-name`
+3. Commit your changes: `git commit -m "Add feature"`
+4. Push to branch: `git push origin feature-name`
+5. Open a Pull Request
+
+---
+
+## License
+
+This project is **MIT Licensed**. See [LICENSE](LICENSE) for details.
+
+```
+
+---
