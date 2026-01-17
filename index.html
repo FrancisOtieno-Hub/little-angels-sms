@@ -34,13 +34,15 @@
     </div>
   </div>
 
-  <script src="js/auth.js"></script>
+  <!-- Auth script as module -->
+  <script type="module" src="js/auth.js"></script>
+
   <script>
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("/pwa/service-worker.js")
-      .then(() => console.log("Service Worker Registered"))
-      .catch(err => console.error("Service Worker Error", err));
-  }
-</script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/pwa/service-worker.js")
+        .then(() => console.log("Service Worker Registered"))
+        .catch(err => console.error("Service Worker Error", err));
+    }
+  </script>
 </body>
 </html>
