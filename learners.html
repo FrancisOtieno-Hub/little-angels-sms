@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learner Registration | Little Angels Academy</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="dashboard">
+    <div class="card">
+      <h2>Register New Learner</h2>
+
+      <form id="learnerForm">
+        <input type="text" id="admissionNo" placeholder="Admission Number" readonly />
+        <input type="text" id="firstName" placeholder="First Name" required />
+        <input type="text" id="lastName" placeholder="Last Name" required />
+
+        <select id="gender">
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+
+        <input type="date" id="dob" />
+
+        <select id="classSelect" required>
+          <option value="">Select Class</option>
+        </select>
+
+        <button type="submit">Save Learner</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Registered Learners</h2>
+      <table id="learnersTable">
+        <thead>
+          <tr>
+            <th>Adm No</th>
+            <th>Name</th>
+            <th>Class</th>
+            <th>Gender</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script type="module" src="js/learners.js"></script>
+</body>
+</html>
