@@ -1,21 +1,21 @@
 import { supabase } from "./supabase.js";
 
-const form = document.getElementById("loginForm");
+const loginForm = document.getElementById("loginForm");
+const email = document.getElementById("email");
+const password = document.getElementById("password");
 
-form.addEventListener("submit", async (e) => {
+loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  const { error } = await supabase.auth.signInWithPassword({
-    email,
-    password
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.value,
+    password: password.value
   });
 
   if (error) {
     alert(error.message);
   } else {
-    window.location.href = "dashboard.html";
+    // Redirect to dashboard
+    window.location.href = "/dashboard.html";
   }
 });
