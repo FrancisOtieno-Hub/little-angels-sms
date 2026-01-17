@@ -19,16 +19,24 @@
       <li><a href="promotion.html">Promotion & Graduation</a></li>
     </ul>
   </div>
+  
+<script type="module">
+  import { supabase } from "./js/supabase.js";
 
-  <script type="module">
-    import { supabase } from "./js/supabase.js";
+  async function checkAuth() {
+    const { data: { session } } = await supabase.auth.getSession();
 
-    const user = supabase.auth.user();
-    if (!user) {
-      // Not logged in, redirect to login
+    if (!session || !session.user) {
+      // Not logged in, redirect to login page
       window.location.href = "/";
+    } else {
+      console.log("Logged in as:", session.user.email);
     }
-  </script>
+  }
+
+  checkAuth();
+</script>
+
 
 </body>
 </html>
