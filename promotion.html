@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Promotion & Graduation | Little Angels Academy</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="dashboard">
+
+    <div class="card">
+      <h2>Promote Learners</h2>
+
+      <select id="fromClass">
+        <option value="">Select Current Class</option>
+      </select>
+
+      <button id="previewBtn">Preview Learners</button>
+      <button id="promoteBtn" class="hidden">Promote Learners</button>
+
+      <table class="mt-20 hidden" id="previewTable">
+        <thead>
+          <tr>
+            <th>Adm No</th>
+            <th>Name</th>
+            <th>Current Class</th>
+            <th>Next Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <script type="module" src="js/promotion.js"></script>
+</body>
+</html>
