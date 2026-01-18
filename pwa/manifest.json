@@ -1,21 +1,26 @@
 {
-  "name": "Little Angels Academy - School Management System",
-  "short_name": "Little Angels SMS",
-  "start_url": "/index.html",
+  "name": "Little Angels Academy SMS",
+  "short_name": "LAA SMS",
+  "description": "School Management System for Little Angels Academy",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#f4f6f9",
-  "theme_color": "#2c7be5",
-  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/assets/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/assets/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
-  ]
+  ],
+  "categories": ["education", "productivity"],
+  "screenshots": []
 }
