@@ -7,19 +7,33 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-
   <div class="dashboard">
-
+    <div class="page-header">
+      <h1>Promotion & Graduation</h1>
+      <div class="header-actions">
+        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
+        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    
+    <div id="alertContainer"></div>
+    
     <div class="card">
-      <h2>Promote Learners</h2>
-
+      <h2>Promote Learners to Next Class</h2>
+      <p class="text-muted mb-20">
+        ⚠️ <strong>Warning:</strong> This action will promote all active learners in the selected class. 
+        Grade 9 learners will be marked as graduated. This cannot be undone.
+      </p>
       <select id="fromClass">
         <option value="">Select Current Class</option>
       </select>
-
-      <button id="previewBtn">Preview Learners</button>
-      <button id="promoteBtn" class="hidden">Promote Learners</button>
-
+      <div style="display: flex; gap: 12px; margin-top: 16px;">
+        <button id="previewBtn" class="btn btn-primary">Preview Learners</button>
+        <button id="promoteBtn" class="btn btn-primary hidden">Promote Learners</button>
+      </div>
+      
+      <div id="loadingPreview" class="text-center text-muted mt-20 hidden">Loading learners...</div>
+      
       <table class="mt-20 hidden" id="previewTable">
         <thead>
           <tr>
@@ -32,9 +46,8 @@
         <tbody></tbody>
       </table>
     </div>
-
   </div>
-
+  
   <script type="module" src="js/promotion.js"></script>
 </body>
 </html>
