@@ -4,44 +4,51 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Little Angels Academy | School Management System</title>
-
-  <!-- PWA -->
   <link rel="manifest" href="pwa/manifest.json" />
-  <meta name="theme-color" content="#2c7be5" />
-
-  <!-- Styles -->
+  <meta name="theme-color" content="#3b82f6" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-
   <div class="login-container">
     <div class="login-card">
-
       <h1>Little Angels Academy</h1>
       <p class="motto">Quality Education, Service and Discipline</p>
-
+      
+      <div id="alertContainer"></div>
+      
       <form id="loginForm">
-        <input type="email" id="email" placeholder="Email Address" required />
-        <input type="password" id="password" placeholder="Password" required />
-        <button type="submit">Login</button>
+        <input 
+          type="email" 
+          id="email" 
+          placeholder="Email Address" 
+          autocomplete="email"
+          required 
+        />
+        <input 
+          type="password" 
+          id="password" 
+          placeholder="Password" 
+          autocomplete="current-password"
+          required 
+        />
+        <button type="submit" id="loginBtn">
+          <span>Login</span>
+        </button>
       </form>
-
+      
       <footer>
         <p>P.O. Box 7093, Thika</p>
         <p>Tel: 0720 985 433</p>
       </footer>
-
     </div>
   </div>
-
-  <!-- Auth script as module -->
+  
   <script type="module" src="js/auth.js"></script>
-
   <script>
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/pwa/service-worker.js")
-        .then(() => console.log("Service Worker Registered"))
-        .catch(err => console.error("Service Worker Error", err));
+        .then(() => console.log("✓ Service Worker Registered"))
+        .catch(err => console.error("✗ Service Worker Error:", err));
     }
   </script>
 </body>
