@@ -8,35 +8,64 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
-
   <div class="dashboard">
+    <div class="page-header">
+      <h1>Learner Registration</h1>
+      <div class="header-actions">
+        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
+        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    
+    <div id="alertContainer"></div>
+    
     <div class="card">
       <h2>Register New Learner</h2>
-
       <form id="learnerForm">
         <input type="text" id="admissionNo" placeholder="Admission Number" readonly />
         <input type="text" id="firstName" placeholder="First Name" required />
         <input type="text" id="lastName" placeholder="Last Name" required />
-
-        <select id="gender">
+        <select id="gender" required>
           <option value="">Select Gender</option>
           <option value="Male">Male</option>
           <option value="Female">Female</option>
         </select>
-
-        <input type="date" id="dob" />
-
+        <input type="date" id="dob" required />
         <select id="classSelect" required>
           <option value="">Select Class</option>
         </select>
-
-        <button type="submit">Save Learner</button>
+        <button type="submit" id="saveBtn">Save Learner</button>
       </form>
     </div>
-
+    
+    <div class="card">
+      <h2>Bulk Learner Upload (Excel)</h2>
+      <p class="text-muted mb-20">Upload an Excel file with columns: first_name, last_name, gender, date_of_birth</p>
+      <select id="bulkClassSelect" required>
+        <option value="">Select Class for Upload</option>
+      </select>
+      <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" />
+      <div style="display: flex; gap: 12px; margin-top: 12px;">
+        <button id="previewBtn" class="btn btn-primary">Preview Learners</button>
+        <button id="saveBulkBtn" class="btn btn-primary hidden">Save All Learners</button>
+      </div>
+      <table id="previewTable" class="hidden mt-20">
+        <thead>
+          <tr>
+            <th>Admission No</th>
+            <th>Name</th>
+            <th>Gender</th>
+            <th>DOB</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    
     <div class="card">
       <h2>Registered Learners</h2>
-      <table id="learnersTable">
+      <div id="loadingLearners" class="text-center text-muted">Loading learners...</div>
+      <table id="learnersTable" class="hidden">
         <thead>
           <tr>
             <th>Adm No</th>
@@ -49,33 +78,7 @@
       </table>
     </div>
   </div>
-
-  <div class="card mt-20">
-  <h2>Bulk Learner Upload (Excel)</h2>
-
-  <select id="bulkClassSelect" required>
-    <option value="">Select Class for Upload</option>
-  </select>
-
-  <input type="file" id="excelFile" accept=".xlsx,.csv" />
-
-  <button id="previewBtn">Preview Learners</button>
-  <button id="saveBulkBtn" class="hidden">Save All Learners</button>
-
-  <table id="previewTable" class="hidden mt-20">
-    <thead>
-      <tr>
-        <th>Admission No</th>
-        <th>Name</th>
-        <th>Gender</th>
-        <th>DOB</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
-
-
+  
   <script type="module" src="js/learners.js"></script>
 </body>
 </html>
