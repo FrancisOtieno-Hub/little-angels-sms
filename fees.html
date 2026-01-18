@@ -7,41 +7,46 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-
   <div class="dashboard">
-
+    <div class="page-header">
+      <h1>Term & Fees Setup</h1>
+      <div class="header-actions">
+        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
+        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    
+    <div id="alertContainer"></div>
+    
     <!-- TERM MANAGEMENT -->
     <div class="card">
       <h2>Academic Term Management</h2>
-
+      <p id="activeTerm" class="text-muted mb-20">Loading active term...</p>
       <form id="termForm">
-        <input type="number" id="year" placeholder="Year (e.g. 2026)" required />
-        <select id="term">
+        <input type="number" id="year" placeholder="Year (e.g. 2026)" min="2020" max="2050" required />
+        <select id="term" required>
+          <option value="">Select Term</option>
           <option value="1">Term 1</option>
           <option value="2">Term 2</option>
           <option value="3">Term 3</option>
         </select>
-        <button type="submit">Set Active Term</button>
+        <button type="submit" id="termBtn">Set Active Term</button>
       </form>
-
-      <p id="activeTerm" class="mt-20"></p>
     </div>
-
+    
     <!-- FEES SETUP -->
     <div class="card">
       <h2>Fees Per Class</h2>
-
       <form id="feesForm">
         <select id="feesClass" required>
           <option value="">Select Class</option>
         </select>
-
-        <input type="number" id="feesAmount" placeholder="Fees Amount (KES)" required />
-
-        <button type="submit">Save / Update Fees</button>
+        <input type="number" id="feesAmount" placeholder="Fees Amount (KES)" min="0" required />
+        <button type="submit" id="feesBtn">Save / Update Fees</button>
       </form>
-
-      <table class="mt-20">
+      
+      <div id="loadingFees" class="text-center text-muted mt-20">Loading fees...</div>
+      <table class="mt-20 hidden" id="feesTableContainer">
         <thead>
           <tr>
             <th>Class</th>
@@ -51,9 +56,8 @@
         <tbody id="feesTable"></tbody>
       </table>
     </div>
-
   </div>
-
+  
   <script type="module" src="js/fees.js"></script>
 </body>
 </html>
