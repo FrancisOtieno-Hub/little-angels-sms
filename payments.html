@@ -7,30 +7,43 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-
   <div class="dashboard">
-
+    <div class="page-header">
+      <h1>Fee Payments</h1>
+      <div class="header-actions">
+        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
+        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    
+    <div id="alertContainer"></div>
+    
     <!-- SEARCH LEARNER -->
     <div class="card">
       <h2>Search Learner</h2>
-      <input type="text" id="searchInput" placeholder="Enter Admission No or Name" />
-      <button id="searchBtn">Search</button>
-
+      <div style="display: flex; gap: 12px;">
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="Enter Admission No or Name" 
+          style="flex: 1;"
+        />
+        <button id="searchBtn" class="btn btn-primary">Search</button>
+      </div>
       <div id="learnerDetails" class="mt-20 hidden"></div>
     </div>
-
+    
     <!-- PAYMENT FORM -->
     <div class="card hidden" id="paymentCard">
       <h2>Record Fee Payment</h2>
-
       <form id="paymentForm">
         <input type="date" id="paymentDate" required />
         <input type="text" id="referenceNo" placeholder="Reference No (optional)" />
-        <input type="number" id="amountPaid" placeholder="Amount Paid (KES)" required />
-        <button type="submit">Save Payment</button>
+        <input type="number" id="amountPaid" placeholder="Amount Paid (KES)" min="1" required />
+        <button type="submit" id="paymentBtn">Save Payment</button>
       </form>
     </div>
-
+    
     <!-- PAYMENT HISTORY -->
     <div class="card hidden" id="historyCard">
       <h2>Payment History</h2>
@@ -45,9 +58,8 @@
         <tbody id="paymentHistory"></tbody>
       </table>
     </div>
-
   </div>
-
+  
   <script type="module" src="js/payments.js"></script>
 </body>
 </html>
