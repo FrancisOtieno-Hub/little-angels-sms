@@ -7,37 +7,44 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-
   <div class="dashboard-container">
-    <h1>Welcome to Little Angels Academy SMS</h1>
-    <p>Select an option below:</p>
-
+    <div class="page-header">
+      <div>
+        <h1>Welcome to Little Angels Academy SMS</h1>
+        <p class="text-muted">Select an option below to get started</p>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    
     <ul class="menu">
-      <li><a href="learners.html">Learners Registration</a></li>
-      <li><a href="fees.html">Term & Fees Setup</a></li>
-      <li><a href="payments.html">Fee Payments</a></li>
-      <li><a href="receipts.html">Receipts</a></li>
-      <li><a href="promotion.html">Promotion & Graduation</a></li>
+      <li><a href="learners.html">👥 Learners Registration</a></li>
+      <li><a href="fees.html">💰 Term & Fees Setup</a></li>
+      <li><a href="payments.html">💳 Fee Payments</a></li>
+      <li><a href="receipts.html">🧾 Receipts</a></li>
+      <li><a href="promotion.html">🎓 Promotion & Graduation</a></li>
     </ul>
   </div>
   
-<script type="module">
-  import { supabase } from "./js/supabase.js";
-
-  async function checkAuth() {
-    const { data: { session } } = await supabase.auth.getSession();
-
-    if (!session || !session.user) {
-      // Not logged in, redirect to login page
-      window.location.href = "/";
-    } else {
-      console.log("Logged in as:", session.user.email);
+  <script type="module">
+    import { supabase } from "./js/supabase.js";
+    
+    async function checkAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) {
+        window.location.href = "/";
+      }
     }
-  }
-
-  checkAuth();
-</script>
-
-
+    
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      if (confirm("Are you sure you want to logout?")) {
+        await supabase.auth.signOut();
+        window.location.href = "/";
+      }
+    });
+    
+    checkAuth();
+  </script>
 </body>
 </html>
