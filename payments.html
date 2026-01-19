@@ -22,12 +22,15 @@
     <div class="card">
       <h2>Search Learner</h2>
       <div style="display: flex; gap: 12px;">
-        <input 
-          type="text" 
-          id="searchInput" 
-          placeholder="Enter Admission No or Name" 
-          style="flex: 1;"
-        />
+        <div class="autocomplete-container">
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Type learner's name or admission number..." 
+            autocomplete="off"
+          />
+          <div id="autocompleteDropdown" class="autocomplete-dropdown hidden"></div>
+        </div>
         <button id="searchBtn" class="btn btn-primary">Search</button>
       </div>
       <div id="learnerDetails" class="mt-20 hidden"></div>
