@@ -2,6 +2,7 @@ import { supabase } from "./supabase.js";
 
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
+const autocompleteDropdown = document.getElementById("autocompleteDropdown");
 const learnerDetails = document.getElementById("learnerDetails");
 const paymentCard = document.getElementById("paymentCard");
 const historyCard = document.getElementById("historyCard");
@@ -16,6 +17,8 @@ const amountPaid = document.getElementById("amountPaid");
 
 let selectedLearner = null;
 let activeTerm = null;
+let autocompleteTimeout = null;
+let allLearners = [];
 
 /* ===========================
    UTILITIES
@@ -83,9 +86,168 @@ async function loadActiveTerm() {
 }
 
 /* ===========================
+   AUTOCOMPLETE FUNCTIONALITY
+=========================== */
+async function loadAllLearners() {
+  try {
+    const { data, error } = await supabase
+      .from("learners")
+      .select(`
+        id,
+        admission_no,
+        first_name,
+        last_name,
+        class_id,
+        classes(name)
+      `)
+      .eq("active", true)
+      .order("first_name");
+    
+    if (error) throw error;
+    
+    allLearners = data || [];
+  } catch (error) {
+    console.error("Error loading learners:", error);
+  }
+}
+
+function showAutocomplete(results) {
+  if (results.length === 0) {
+    autocompleteDropdown.innerHTML = `
+      <div class="autocomplete-no-results">No learners found</div>
+    `;
+    autocompleteDropdown.classList.remove("hidden");
+    return;
+  }
+  
+  autocompleteDropdown.innerHTML = results.map((learner, index) => `
+    <div class="autocomplete-item" data-index="${index}">
+      <span class="learner-name">${learner.first_name} ${learner.last_name}</span>
+      <span class="learner-details">
+        ${learner.admission_no} • ${learner.classes?.name || 'N/A'}
+      </span>
+    </div>
+  `).join('');
+  
+  autocompleteDropdown.classList.remove("hidden");
+  
+  // Add click handlers to items
+  document.querySelectorAll('.autocomplete-item').forEach((item, index) => {
+    item.addEventListener('click', () => {
+      selectLearnerFromAutocomplete(results[index]);
+    });
+  });
+}
+
+function hideAutocomplete() {
+  autocompleteDropdown.classList.add("hidden");
+}
+
+function selectLearnerFromAutocomplete(learner) {
+  searchInput.value = `${learner.first_name} ${learner.last_name} (${learner.admission_no})`;
+  selectedLearner = learner;
+  hideAutocomplete();
+  
+  // Automatically trigger display
+  displayLearnerDetails();
+  loadPaymentHistory();
+  paymentDate.valueAsDate = new Date();
+}
+
+function filterLearners(query) {
+  if (!query || query.length < 2) {
+    return [];
+  }
+  
+  const searchQuery = query.toLowerCase();
+  
+  return allLearners.filter(learner => {
+    const fullName = `${learner.first_name} ${learner.last_name}`.toLowerCase();
+    const admissionNo = learner.admission_no.toLowerCase();
+    
+    return fullName.includes(searchQuery) || admissionNo.includes(searchQuery);
+  }).slice(0, 10); // Limit to 10 results
+}
+
+// Input event for autocomplete
+searchInput.addEventListener('input', (e) => {
+  const query = e.target.value.trim();
+  
+  // Clear previous timeout
+  if (autocompleteTimeout) {
+    clearTimeout(autocompleteTimeout);
+  }
+  
+  // Reset selected learner if input changes
+  if (selectedLearner && !query.includes(selectedLearner.admission_no)) {
+    selectedLearner = null;
+    learnerDetails.classList.add("hidden");
+    paymentCard.classList.add("hidden");
+    historyCard.classList.add("hidden");
+  }
+  
+  if (query.length < 2) {
+    hideAutocomplete();
+    return;
+  }
+  
+  // Debounce the search
+  autocompleteTimeout = setTimeout(() => {
+    const results = filterLearners(query);
+    showAutocomplete(results);
+  }, 300);
+});
+
+// Close autocomplete when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.autocomplete-container')) {
+    hideAutocomplete();
+  }
+});
+
+// Keyboard navigation for autocomplete
+searchInput.addEventListener('keydown', (e) => {
+  const items = autocompleteDropdown.querySelectorAll('.autocomplete-item');
+  const selectedItem = autocompleteDropdown.querySelector('.autocomplete-item.selected');
+  let currentIndex = selectedItem ? parseInt(selectedItem.dataset.index) : -1;
+  
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    currentIndex = Math.min(currentIndex + 1, items.length - 1);
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    currentIndex = Math.max(currentIndex - 1, 0);
+  } else if (e.key === 'Enter' && currentIndex >= 0) {
+    e.preventDefault();
+    items[currentIndex].click();
+    return;
+  } else if (e.key === 'Escape') {
+    hideAutocomplete();
+    return;
+  } else {
+    return;
+  }
+  
+  // Update selected class
+  items.forEach(item => item.classList.remove('selected'));
+  if (currentIndex >= 0 && items[currentIndex]) {
+    items[currentIndex].classList.add('selected');
+    items[currentIndex].scrollIntoView({ block: 'nearest' });
+  }
+});
+
+/* ===========================
    SEARCH LEARNER
 =========================== */
 searchBtn.addEventListener("click", async () => {
+  // If learner already selected from autocomplete, skip search
+  if (selectedLearner) {
+    await displayLearnerDetails();
+    await loadPaymentHistory();
+    paymentDate.valueAsDate = new Date();
+    return;
+  }
+  
   const query = searchInput.value.trim();
   
   if (!query) {
@@ -141,9 +303,9 @@ searchBtn.addEventListener("click", async () => {
   }
 });
 
-// Allow Enter key to search
+// Allow Enter key to search (only if autocomplete is not visible)
 searchInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter") {
+  if (e.key === "Enter" && autocompleteDropdown.classList.contains('hidden')) {
     searchBtn.click();
   }
 });
@@ -304,3 +466,4 @@ async function loadPaymentHistory() {
 =========================== */
 checkAuth();
 loadActiveTerm();
+loadAllLearners(); // Load learners for autocomplete
