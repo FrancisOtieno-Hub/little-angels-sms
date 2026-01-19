@@ -184,16 +184,34 @@ feesForm.addEventListener("submit", async (e) => {
   setLoading(feesBtn, true, "Save / Update Fees");
   
   try {
-    // Upsert fees
-    const { error } = await supabase
+    // Check if fee already exists
+    const { data: existingFee } = await supabase
       .from("fees")
-      .upsert({
-        class_id: classId,
-        term_id: activeTermId,
-        amount: parseFloat(amount)
-      }, {
-        onConflict: 'class_id,term_id'
-      });
+      .select("id")
+      .eq("class_id", classId)
+      .eq("term_id", activeTermId)
+      .maybeSingle();
+    
+    let error;
+    
+    if (existingFee) {
+      // Update existing fee
+      const result = await supabase
+        .from("fees")
+        .update({ amount: parseFloat(amount) })
+        .eq("id", existingFee.id);
+      error = result.error;
+    } else {
+      // Insert new fee
+      const result = await supabase
+        .from("fees")
+        .insert({
+          class_id: classId,
+          term_id: activeTermId,
+          amount: parseFloat(amount)
+        });
+      error = result.error;
+    }
     
     if (error) throw error;
     
