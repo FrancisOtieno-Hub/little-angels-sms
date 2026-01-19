@@ -515,9 +515,14 @@ table tbody tr:last-child td {
 }
 
 /* ===========================
-   PRINT STYLES
+   PRINT STYLES - 9.5" x 11" PAYSLIP
 =========================== */
 @media print {
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+  
   body {
     background: white;
   }
@@ -527,14 +532,125 @@ table tbody tr:last-child td {
   }
   
   .receipt {
-    width: 80mm;
-    margin: auto;
-    font-family: "Courier New", monospace;
-    font-size: 12px;
-    line-height: 1.4;
+    width: 100%;
+    max-width: 8.5in;
+    margin: 0 auto;
+    font-family: Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: black !important;
   }
   
   .receipt * {
     color: black !important;
+  }
+  
+  .receipt-header {
+    text-align: center;
+    border-bottom: 2px solid #000;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+  }
+  
+  .receipt-header h1 {
+    font-size: 18pt;
+    font-weight: bold;
+    margin: 0 0 5px 0;
+  }
+  
+  .receipt-header p {
+    margin: 3px 0;
+    font-size: 10pt;
+  }
+  
+  .receipt-body {
+    margin: 20px 0;
+  }
+  
+  .info-section {
+    margin-bottom: 25px;
+  }
+  
+  .info-row {
+    display: flex;
+    margin-bottom: 8px;
+  }
+  
+  .info-label {
+    width: 150px;
+    font-weight: bold;
+  }
+  
+  .info-value {
+    flex: 1;
+    border-bottom: 1px dotted #333;
+  }
+  
+  .payment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+  }
+  
+  .payment-table th,
+  .payment-table td {
+    border: 1px solid #000;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .payment-table th {
+    background: #f0f0f0;
+    font-weight: bold;
+  }
+  
+  .payment-table td {
+    font-size: 10pt;
+  }
+  
+  .summary-section {
+    margin-top: 30px;
+    padding-top: 15px;
+    border-top: 2px solid #000;
+  }
+  
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 11pt;
+  }
+  
+  .summary-row.total {
+    font-size: 13pt;
+    font-weight: bold;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #000;
+  }
+  
+  .receipt-footer {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid #000;
+    font-size: 9pt;
+    text-align: center;
+  }
+  
+  .signature-section {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 50px;
+  }
+  
+  .signature-box {
+    width: 45%;
+    text-align: center;
+  }
+  
+  .signature-line {
+    border-top: 1px solid #000;
+    margin-top: 50px;
+    padding-top: 5px;
   }
 }
