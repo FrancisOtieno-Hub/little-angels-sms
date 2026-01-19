@@ -163,46 +163,122 @@ searchInput.addEventListener("keypress", (e) => {
 });
 
 /* ===========================
-   RENDER RECEIPT
+   RENDER RECEIPT - 9.5" x 11" PAYSLIP FORMAT
 =========================== */
 function renderReceipt(learner, term, payments, totalFees, totalPaid, balance) {
-  let paymentLines = payments.map(p => {
-    const date = new Date(p.payment_date).toLocaleDateString();
+  const paymentRows = payments.map(p => {
+    const date = new Date(p.payment_date).toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
     const ref = p.reference_no || "-";
-    const amount = Number(p.amount).toLocaleString();
-    return `${date.padEnd(15)} ${ref.padEnd(12)} ${amount}`;
-  }).join("<br>");
+    const amount = Number(p.amount).toLocaleString('en-US', { 
+      minimumFractionDigits: 2, 
+      maximumFractionDigits: 2 
+    });
+    return `
+      <tr>
+        <td>${date}</td>
+        <td>${ref}</td>
+        <td style="text-align: right;">KES ${amount}</td>
+      </tr>
+    `;
+  }).join("");
   
   container.innerHTML = `
-    <div style="text-align:center; font-family: 'Courier New', monospace; padding: 20px;">
-      <strong style="font-size: 16px;">LITTLE ANGELS ACADEMY</strong><br>
-      <span style="font-size: 12px;">Quality Education, Service and Discipline</span><br>
-      P.O. Box 7093, Thika<br>
-      Tel: 0720 985 433<br>
-      <div style="margin: 12px 0; border-top: 2px dashed #000;"></div>
-      <div style="text-align: left; margin: 16px 0;">
-        <strong>FEE RECEIPT</strong><br><br>
-        Adm No: <strong>${learner.admission_no}</strong><br>
-        Name  : <strong>${learner.first_name} ${learner.last_name}</strong><br>
-        Class : <strong>${learner.classes?.name || 'N/A'}</strong><br>
-        Term  : <strong>${term.year} - Term ${term.term}</strong><br>
+    <div class="receipt-header">
+      <h1>LITTLE ANGELS ACADEMY</h1>
+      <p><em>Quality Education, Service and Discipline</em></p>
+      <p>P.O. Box 7093, Thika</p>
+      <p>Tel: 0720 985 433</p>
+    </div>
+    
+    <div class="receipt-body">
+      <h2 style="text-align: center; margin: 20px 0; text-decoration: underline;">FEE PAYMENT RECEIPT</h2>
+      
+      <div class="info-section">
+        <div class="info-row">
+          <div class="info-label">Admission Number:</div>
+          <div class="info-value">${learner.admission_no}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Student Name:</div>
+          <div class="info-value">${learner.first_name} ${learner.last_name}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Class:</div>
+          <div class="info-value">${learner.classes?.name || 'N/A'}</div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Academic Term:</div>
+          <div class="info-value">Year ${term.year} - Term ${term.term}</div>
+        </div>
       </div>
-      <div style="margin: 12px 0; border-top: 2px dashed #000;"></div>
-      <div style="text-align: left; font-size: 11px;">
-        <strong>DATE           REF          AMOUNT</strong><br>
-        ${paymentLines}
+      
+      <h3 style="margin: 25px 0 15px 0;">Payment Details:</h3>
+      <table class="payment-table">
+        <thead>
+          <tr>
+            <th>Payment Date</th>
+            <th>Reference No.</th>
+            <th style="text-align: right;">Amount</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${paymentRows}
+        </tbody>
+      </table>
+      
+      <div class="summary-section">
+        <div class="summary-row">
+          <span>Total Fees for Term:</span>
+          <span><strong>KES ${totalFees.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></span>
+        </div>
+        <div class="summary-row">
+          <span>Total Amount Paid:</span>
+          <span><strong>KES ${totalPaid.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></span>
+        </div>
+        <div class="summary-row total">
+          <span>Balance ${balance > 0 ? 'Due' : balance < 0 ? 'Overpayment' : 'Cleared'}:</span>
+          <span style="color: ${balance > 0 ? '#000' : balance < 0 ? '#000' : '#000'};">
+            KES ${Math.abs(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          </span>
+        </div>
       </div>
-      <div style="margin: 12px 0; border-top: 2px dashed #000;"></div>
-      <div style="text-align: left;">
-        Total Fees: <strong>KES ${totalFees.toLocaleString()}</strong><br>
-        Total Paid: <strong>KES ${totalPaid.toLocaleString()}</strong><br>
-        Balance   : <strong style="color: ${balance > 0 ? 'red' : 'green'};">KES ${balance.toLocaleString()}</strong><br>
+      
+      <div class="signature-section">
+        <div class="signature-box">
+          <div class="signature-line">
+            Received By
+          </div>
+        </div>
+        <div class="signature-box">
+          <div class="signature-line">
+            Date: ${new Date().toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}
+          </div>
+        </div>
       </div>
-      <div style="margin: 12px 0; border-top: 2px dashed #000;"></div>
-      <div style="font-size: 11px; margin-top: 16px;">
-        Thank you for your payment.<br><br>
-        <em>Printed: ${new Date().toLocaleString()}</em>
-      </div>
+    </div>
+    
+    <div class="receipt-footer">
+      <p><strong>Thank you for your payment</strong></p>
+      <p style="margin-top: 10px; font-size: 8pt;">
+        This is an official receipt from Little Angels Academy. Please retain for your records.
+      </p>
+      <p style="margin-top: 5px; font-size: 8pt;">
+        Printed on: ${new Date().toLocaleString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}
+      </p>
     </div>
   `;
   
