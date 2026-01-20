@@ -408,16 +408,54 @@ paymentForm.addEventListener("submit", async (e) => {
 
     if (error) throw error;
 
-    showAlert("Payment recorded successfully");
-    paymentForm.reset();
-    paymentDate.valueAsDate = new Date();
+    showAlert(`✓ Payment of KES ${amount.toLocaleString()} recorded successfully for ${selectedLearner.first_name} ${selectedLearner.last_name}`);
+    
+    // Update the current learner's details and history
     await displayLearnerDetails();
     await loadPaymentHistory();
+    
+    // Clear only the payment form
+    paymentForm.reset();
+    paymentDate.valueAsDate = new Date();
+    
+    // After 2 seconds, clear everything for next learner
+    setTimeout(() => {
+      resetForNextLearner();
+    }, 2000);
+    
   } catch (error) {
     showAlert("Error saving payment: " + error.message, "error");
   } finally {
     setLoading(paymentBtn, false, "Save Payment");
   }
+});
+
+/* ===========================
+   RESET FOR NEXT LEARNER
+=========================== */
+function resetForNextLearner() {
+  // Clear selected learner
+  selectedLearner = null;
+  
+  // Clear search input
+  searchInput.value = "";
+  searchInput.focus();
+  
+  // Hide all sections
+  learnerDetails.classList.add("hidden");
+  paymentCard.classList.add("hidden");
+  historyCard.classList.add("hidden");
+  
+  // Clear payment form
+  paymentForm.reset();
+  
+  // Show helpful message
+  showAlert("Ready to search for next learner", "info");
+}
+
+// Next Learner button click handler
+document.getElementById("nextLearnerBtn").addEventListener("click", () => {
+  resetForNextLearner();
 });
 
 /* ===========================
