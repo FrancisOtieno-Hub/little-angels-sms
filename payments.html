@@ -38,7 +38,12 @@
     
     <!-- PAYMENT FORM -->
     <div class="card hidden" id="paymentCard">
-      <h2>Record Fee Payment</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">Record Fee Payment</h2>
+        <button type="button" id="nextLearnerBtn" class="btn btn-secondary" style="width: auto;">
+          Next Learner →
+        </button>
+      </div>
       <form id="paymentForm">
         <input type="date" id="paymentDate" required />
         <input type="text" id="referenceNo" placeholder="Reference No (optional)" />
