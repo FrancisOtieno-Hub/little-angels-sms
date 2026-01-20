@@ -43,6 +43,37 @@ function setLoading(button, loading, text = "Save") {
     : `<span>${text}</span>`;
 }
 
+// Convert Excel serial date to YYYY-MM-DD format
+function excelDateToJSDate(serial) {
+  // If it's already a string date, try to parse it
+  if (typeof serial === 'string') {
+    // Check if it's already in YYYY-MM-DD format
+    if (/^\d{4}-\d{2}-\d{2}$/.test(serial)) {
+      return serial;
+    }
+    // Try to parse other date formats
+    const parsed = new Date(serial);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toISOString().split('T')[0];
+    }
+    return null;
+  }
+  
+  // If it's a number (Excel serial date)
+  if (typeof serial === 'number') {
+    // Excel dates start from 1900-01-01 (serial 1)
+    // JavaScript dates use milliseconds since 1970-01-01
+    const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
+    const date = new Date(excelEpoch.getTime() + serial * 86400000); // 86400000 ms in a day
+    
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
+    }
+  }
+  
+  return null;
+}
+
 /* ===========================
    AUTH CHECK
 =========================== */
@@ -236,12 +267,18 @@ previewBtn.addEventListener("click", async () => {
         rows.forEach(row => {
           const admissionNo = `LAA/${year}/${String(counter++).padStart(4, "0")}`;
 
+          // Convert Excel date to proper format
+          let dateOfBirth = null;
+          if (row.date_of_birth) {
+            dateOfBirth = excelDateToJSDate(row.date_of_birth);
+          }
+
           const learner = {
             admission_no: admissionNo,
             first_name: row.first_name || "",
             last_name: row.last_name || "",
             gender: row.gender || "",
-            date_of_birth: row.date_of_birth || null,
+            date_of_birth: dateOfBirth,
             class_id: bulkClassSelect.value
           };
 
@@ -252,7 +289,7 @@ previewBtn.addEventListener("click", async () => {
             <td>${admissionNo}</td>
             <td>${row.first_name} ${row.last_name}</td>
             <td>${row.gender || 'N/A'}</td>
-            <td>${row.date_of_birth || 'N/A'}</td>
+            <td>${dateOfBirth || 'N/A'}</td>
           `;
           previewBody.appendChild(tr);
         });
