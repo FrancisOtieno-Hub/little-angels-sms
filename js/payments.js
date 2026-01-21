@@ -317,15 +317,41 @@ async function displayLearnerDetails() {
   if (!selectedLearner || !activeTerm) return;
 
   try {
-    // Fetch fees
-    const { data: feeData } = await supabase
-      .from("fees")
-      .select("amount")
-      .eq("class_id", selectedLearner.class_id)
+    // Check for custom fee first
+    const { data: customFeeData } = await supabase
+      .from("custom_fees")
+      .select("custom_amount, fee_type, reason")
+      .eq("learner_id", selectedLearner.id)
       .eq("term_id", activeTerm.id)
       .maybeSingle();
 
-    const totalFees = feeData?.amount || 0;
+    let totalFees = 0;
+    let feeNote = "";
+
+    if (customFeeData) {
+      // Use custom fee
+      totalFees = Number(customFeeData.custom_amount);
+      const feeTypeLabel = {
+        'full_sponsorship': 'Full Sponsorship',
+        'partial_sponsorship': 'Partial Sponsorship',
+        'custom_amount': 'Custom Fee'
+      }[customFeeData.fee_type] || 'Custom Fee';
+      
+      feeNote = `<br><span style="color: var(--secondary); font-weight: 600;">ℹ️ ${feeTypeLabel}</span>`;
+      if (customFeeData.reason) {
+        feeNote += `<br><span style="font-size: 0.9rem; color: var(--text-secondary);">${customFeeData.reason}</span>`;
+      }
+    } else {
+      // Fetch regular class fee
+      const { data: feeData } = await supabase
+        .from("fees")
+        .select("amount")
+        .eq("class_id", selectedLearner.class_id)
+        .eq("term_id", activeTerm.id)
+        .maybeSingle();
+
+      totalFees = feeData?.amount || 0;
+    }
 
     // Fetch payments
     const { data: payments } = await supabase
@@ -344,7 +370,7 @@ async function displayLearnerDetails() {
         </h3>
         <p><strong>Admission No:</strong> ${selectedLearner.admission_no}</p>
         <p><strong>Class:</strong> ${selectedLearner.classes?.name || 'N/A'}</p>
-        <p><strong>Term:</strong> Year ${activeTerm.year} - Term ${activeTerm.term}</p>
+        <p><strong>Term:</strong> Year ${activeTerm.year} - Term ${activeTerm.term}${feeNote}</p>
         <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border);">
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-top: 16px;">
           <div>
