@@ -279,15 +279,35 @@ btn.addEventListener("click", async () => {
       return;
     }
     
-    // Fetch fees
-    const { data: fee } = await supabase
-      .from("fees")
-      .select("amount")
-      .eq("class_id", learnerToUse.class_id)
+    // Check for custom fee first
+    const { data: customFeeData } = await supabase
+      .from("custom_fees")
+      .select("custom_amount, fee_type, reason")
+      .eq("learner_id", learnerToUse.id)
       .eq("term_id", term.id)
       .maybeSingle();
-    
-    const totalFees = fee?.amount || 0;
+
+    let totalFees = 0;
+    let feeInfo = null;
+
+    if (customFeeData) {
+      // Use custom fee
+      totalFees = Number(customFeeData.custom_amount);
+      feeInfo = {
+        type: customFeeData.fee_type,
+        reason: customFeeData.reason
+      };
+    } else {
+      // Fetch regular class fee
+      const { data: fee } = await supabase
+        .from("fees")
+        .select("amount")
+        .eq("class_id", learnerToUse.class_id)
+        .eq("term_id", term.id)
+        .maybeSingle();
+      
+      totalFees = fee?.amount || 0;
+    }
     
     // Fetch payments
     const { data: payments } = await supabase
@@ -306,7 +326,7 @@ btn.addEventListener("click", async () => {
     const totalPaid = payments.reduce((s, p) => s + Number(p.amount), 0);
     const balance = totalFees - totalPaid;
     
-    renderReceipt(learnerToUse, term, payments, totalFees, totalPaid, balance);
+    renderReceipt(learnerToUse, term, payments, totalFees, totalPaid, balance, feeInfo);
     
     // Auto-print after a short delay
     setTimeout(() => {
@@ -330,7 +350,7 @@ searchInput.addEventListener("keypress", (e) => {
 /* ===========================
    RENDER RECEIPT - 9.5" x 11" PAYSLIP FORMAT
 =========================== */
-function renderReceipt(learner, term, payments, totalFees, totalPaid, balance) {
+function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, feeInfo = null) {
   const paymentRows = payments.map(p => {
     const date = new Date(p.payment_date).toLocaleDateString('en-US', { 
       year: 'numeric', 
@@ -350,6 +370,23 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance) {
       </tr>
     `;
   }).join("");
+  
+  // Add custom fee info if applicable
+  let feeNoteHtml = '';
+  if (feeInfo) {
+    const feeTypeLabel = {
+      'full_sponsorship': 'Full Sponsorship',
+      'partial_sponsorship': 'Partial Sponsorship',
+      'custom_amount': 'Custom Fee Arrangement'
+    }[feeInfo.type] || 'Custom Fee';
+    
+    feeNoteHtml = `
+      <div style="background: #fffbeb; border: 1px solid #fbbf24; padding: 12px; border-radius: 6px; margin: 15px 0;">
+        <strong>📋 ${feeTypeLabel}</strong>
+        ${feeInfo.reason ? `<br><em style="font-size: 0.9em;">${feeInfo.reason}</em>` : ''}
+      </div>
+    `;
+  }
   
   container.innerHTML = `
     <div class="receipt-header">
@@ -380,6 +417,8 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance) {
           <div class="info-value">Year ${term.year} - Term ${term.term}</div>
         </div>
       </div>
+      
+      ${feeNoteHtml}
       
       <h3 style="margin: 25px 0 15px 0;">Payment Details:</h3>
       <table class="payment-table">
