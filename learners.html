@@ -63,19 +63,32 @@
     </div>
     
     <div class="card">
-      <h2>Registered Learners</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h2 style="margin: 0;">Registered Learners</h2>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <select id="classFilter" style="width: auto; margin: 0;">
+            <option value="">All Classes</option>
+          </select>
+          <button id="exportExcelBtn" class="btn btn-primary" style="width: auto;">
+            📊 Export to Excel
+          </button>
+        </div>
+      </div>
+      <div id="learnerStats" class="mb-20" style="display: flex; gap: 20px; flex-wrap: wrap;"></div>
       <div id="loadingLearners" class="text-center text-muted">Loading learners...</div>
-      <table id="learnersTable" class="hidden">
-        <thead>
-          <tr>
-            <th>Adm No</th>
-            <th>Name</th>
-            <th>Class</th>
-            <th>Gender</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
+      <div id="tableWrapper" class="hidden" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+        <table id="learnersTable">
+          <thead style="position: sticky; top: 0; background: var(--background); z-index: 10;">
+            <tr>
+              <th>Adm No</th>
+              <th>Name</th>
+              <th>Class</th>
+              <th>Gender</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
   </div>
   
