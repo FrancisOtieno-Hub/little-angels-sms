@@ -5,9 +5,13 @@ const classSelect = document.getElementById("classSelect");
 const admissionNoInput = document.getElementById("admissionNo");
 const tableBody = document.querySelector("#learnersTable tbody");
 const learnersTable = document.getElementById("learnersTable");
+const tableWrapper = document.getElementById("tableWrapper");
 const loadingLearners = document.getElementById("loadingLearners");
 const alertContainer = document.getElementById("alertContainer");
 const saveBtn = document.getElementById("saveBtn");
+const classFilter = document.getElementById("classFilter");
+const exportExcelBtn = document.getElementById("exportExcelBtn");
+const learnerStats = document.getElementById("learnerStats");
 
 // Bulk upload elements
 const excelFileInput = document.getElementById("excelFile");
@@ -18,6 +22,8 @@ const previewBody = previewTable.querySelector("tbody");
 const bulkClassSelect = document.getElementById("bulkClassSelect");
 
 let bulkLearners = [];
+let allLearnersData = [];
+let allClassesData = [];
 
 /* ===========================
    UTILITIES
@@ -103,12 +109,20 @@ async function loadClasses() {
 
     if (error) throw error;
 
+    allClassesData = data || [];
+
     data.forEach(cls => {
       const option = document.createElement("option");
       option.value = cls.id;
       option.textContent = cls.name;
       classSelect.appendChild(option.cloneNode(true));
-      bulkClassSelect.appendChild(option);
+      bulkClassSelect.appendChild(option.cloneNode(true));
+      
+      // Add to filter dropdown
+      const filterOption = document.createElement("option");
+      filterOption.value = cls.id;
+      filterOption.textContent = cls.name;
+      classFilter.appendChild(filterOption);
     });
   } catch (error) {
     showAlert("Error loading classes: " + error.message, "error");
@@ -176,28 +190,42 @@ form.addEventListener("submit", async (e) => {
 /* ===========================
    LOAD LEARNERS
 =========================== */
-async function loadLearners() {
+async function loadLearners(filterClassId = null) {
   try {
     tableBody.innerHTML = "";
     loadingLearners.classList.remove("hidden");
-    learnersTable.classList.add("hidden");
+    tableWrapper.classList.add("hidden");
 
-    const { data, error } = await supabase
+    let query = supabase
       .from("learners")
       .select(`
         admission_no,
         first_name,
         last_name,
         gender,
-        classes(name)
+        date_of_birth,
+        class_id,
+        classes(id, name, level)
       `)
       .eq("active", true)
       .order("created_at", { ascending: false });
 
+    // Apply filter if specified
+    if (filterClassId) {
+      query = query.eq("class_id", filterClassId);
+    }
+
+    const { data, error } = await query;
+
     if (error) throw error;
 
+    allLearnersData = data || [];
+
     if (data.length === 0) {
-      loadingLearners.textContent = "No learners registered yet.";
+      loadingLearners.textContent = filterClassId 
+        ? "No learners found in this class." 
+        : "No learners registered yet.";
+      updateLearnerStats([]);
       return;
     }
 
@@ -213,12 +241,140 @@ async function loadLearners() {
     });
 
     loadingLearners.classList.add("hidden");
-    learnersTable.classList.remove("hidden");
+    tableWrapper.classList.remove("hidden");
+    updateLearnerStats(data);
   } catch (error) {
     loadingLearners.textContent = "Error loading learners.";
     showAlert("Error loading learners: " + error.message, "error");
   }
 }
+
+/* ===========================
+   UPDATE LEARNER STATISTICS
+=========================== */
+function updateLearnerStats(learners) {
+  const total = learners.length;
+  const male = learners.filter(l => l.gender === 'Male').length;
+  const female = learners.filter(l => l.gender === 'Female').length;
+  
+  learnerStats.innerHTML = `
+    <div style="padding: 12px 16px; background: var(--background); border-radius: var(--radius-sm); border-left: 3px solid var(--primary);">
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">Total Learners</div>
+      <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">${total}</div>
+    </div>
+    <div style="padding: 12px 16px; background: var(--background); border-radius: var(--radius-sm); border-left: 3px solid #3b82f6;">
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">Male</div>
+      <div style="font-size: 1.5rem; font-weight: 700; color: #3b82f6;">${male}</div>
+    </div>
+    <div style="padding: 12px 16px; background: var(--background); border-radius: var(--radius-sm); border-left: 3px solid #ec4899;">
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">Female</div>
+      <div style="font-size: 1.5rem; font-weight: 700; color: #ec4899;">${female}</div>
+    </div>
+  `;
+}
+
+/* ===========================
+   CLASS FILTER CHANGE
+=========================== */
+classFilter.addEventListener('change', (e) => {
+  const selectedClass = e.target.value;
+  loadLearners(selectedClass || null);
+});
+
+/* ===========================
+   EXPORT TO EXCEL
+=========================== */
+exportExcelBtn.addEventListener('click', async () => {
+  try {
+    setLoading(exportExcelBtn, true, "Export to Excel");
+    
+    // Fetch all active learners with class info
+    const { data: allLearners, error } = await supabase
+      .from("learners")
+      .select(`
+        admission_no,
+        first_name,
+        last_name,
+        gender,
+        date_of_birth,
+        classes(id, name, level)
+      `)
+      .eq("active", true)
+      .order("classes(level)", { ascending: true });
+    
+    if (error) throw error;
+    
+    if (!allLearners || allLearners.length === 0) {
+      showAlert("No learners to export", "error");
+      setLoading(exportExcelBtn, false, "Export to Excel");
+      return;
+    }
+    
+    // Create a new workbook
+    const wb = XLSX.utils.book_new();
+    
+    // Group learners by class
+    const learnersByClass = {};
+    
+    allLearners.forEach(learner => {
+      const className = learner.classes?.name || 'Unassigned';
+      if (!learnersByClass[className]) {
+        learnersByClass[className] = [];
+      }
+      learnersByClass[className].push({
+        'Admission No': learner.admission_no,
+        'First Name': learner.first_name,
+        'Last Name': learner.last_name,
+        'Gender': learner.gender || '',
+        'Date of Birth': learner.date_of_birth || ''
+      });
+    });
+    
+    // Sort classes by level
+    const sortedClasses = allClassesData
+      .map(cls => cls.name)
+      .filter(name => learnersByClass[name]);
+    
+    // Add unassigned if exists
+    if (learnersByClass['Unassigned']) {
+      sortedClasses.push('Unassigned');
+    }
+    
+    // Create a sheet for each class
+    sortedClasses.forEach(className => {
+      const learners = learnersByClass[className];
+      const ws = XLSX.utils.json_to_sheet(learners);
+      
+      // Set column widths
+      ws['!cols'] = [
+        { wch: 15 }, // Admission No
+        { wch: 15 }, // First Name
+        { wch: 15 }, // Last Name
+        { wch: 10 }, // Gender
+        { wch: 15 }  // Date of Birth
+      ];
+      
+      // Add sheet to workbook (limit sheet name to 31 chars)
+      const sheetName = className.substring(0, 31);
+      XLSX.utils.book_append_sheet(wb, ws, sheetName);
+    });
+    
+    // Generate filename with current date
+    const today = new Date().toISOString().split('T')[0];
+    const filename = `LAA_Learners_${today}.xlsx`;
+    
+    // Download the file
+    XLSX.writeFile(wb, filename);
+    
+    showAlert(`✓ Exported ${allLearners.length} learners across ${sortedClasses.length} classes`);
+    
+  } catch (error) {
+    showAlert("Error exporting to Excel: " + error.message, "error");
+    console.error("Export error:", error);
+  } finally {
+    setLoading(exportExcelBtn, false, "📊 Export to Excel");
+  }
+});
 
 /* ===========================
    BULK UPLOAD - PREVIEW
