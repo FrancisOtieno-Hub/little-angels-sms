@@ -134,19 +134,30 @@ async function loadClasses() {
 =========================== */
 async function generateAdmissionNo() {
   try {
-    const year = new Date().getFullYear();
-
+    // Get all existing admission numbers to find the highest
     const { data, error } = await supabase
       .from("learners")
       .select("admission_no")
-      .like("admission_no", `LAA/${year}/%`);
+      .order("admission_no", { ascending: false })
+      .limit(1);
 
     if (error) throw error;
 
-    const nextNumber = data.length + 1;
-    const padded = String(nextNumber).padStart(4, "0");
+    let nextNumber = 1;
+    
+    if (data && data.length > 0) {
+      // Extract number from existing admission number
+      const lastAdmNo = data[0].admission_no;
+      const lastNumber = parseInt(lastAdmNo);
+      
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
+    }
 
-    admissionNoInput.value = `LAA/${year}/${padded}`;
+    // Generate 4-digit padded number (0001, 0002, etc.)
+    const paddedNumber = String(nextNumber).padStart(4, "0");
+    admissionNoInput.value = paddedNumber;
   } catch (error) {
     showAlert("Error generating admission number: " + error.message, "error");
   }
@@ -416,12 +427,20 @@ previewBtn.addEventListener("click", async () => {
         const { data: existing } = await supabase
           .from("learners")
           .select("admission_no")
-          .like("admission_no", `LAA/${year}/%`);
+          .order("admission_no", { ascending: false })
+          .limit(1);
 
-        let counter = existing.length + 1;
+        let counter = 1;
+        
+        if (existing && existing.length > 0) {
+          const lastNumber = parseInt(existing[0].admission_no);
+          if (!isNaN(lastNumber)) {
+            counter = lastNumber + 1;
+          }
+        }
 
         rows.forEach(row => {
-          const admissionNo = `LAA/${year}/${String(counter++).padStart(4, "0")}`;
+          const admissionNo = String(counter++).padStart(4, "0");
 
           // Convert Excel date to proper format
           let dateOfBirth = null;
