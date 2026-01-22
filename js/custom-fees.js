@@ -417,10 +417,14 @@ customFeeForm.addEventListener('submit', async (e) => {
 
       if (error) throw error;
 
-      showAlert("✓ Custom fee removed. Learner will now use class fee.");
-      customFeeForm.reset();
-      await displayLearnerDetails();
+      showAlert(`✓ Custom fee removed for ${selectedLearner.first_name} ${selectedLearner.last_name}. Will now use class fee.`);
       await loadCustomFeesList();
+      
+      // Auto-refresh after 2 seconds
+      setTimeout(() => {
+        resetForNextLearner();
+      }, 2000);
+      
       return;
     }
 
@@ -469,15 +473,56 @@ customFeeForm.addEventListener('submit', async (e) => {
 
     if (error) throw error;
 
-    showAlert(`✓ Custom fee of KES ${amount.toLocaleString()} set for ${selectedLearner.first_name} ${selectedLearner.last_name}`);
-    customFeeForm.reset();
-    await displayLearnerDetails();
+    const feeTypeLabel = {
+      'full_sponsorship': 'Full Sponsorship',
+      'partial_sponsorship': 'Partial Sponsorship',
+      'custom_amount': 'Custom Fee'
+    }[type] || 'Custom Fee';
+
+    showAlert(`✓ ${feeTypeLabel} of KES ${amount.toLocaleString()} set for ${selectedLearner.first_name} ${selectedLearner.last_name}`);
+    
+    // Update the list
     await loadCustomFeesList();
+    
+    // Auto-refresh after 2 seconds for next learner
+    setTimeout(() => {
+      resetForNextLearner();
+    }, 2000);
+    
   } catch (error) {
     showAlert("Error saving custom fee: " + error.message, "error");
   } finally {
     setLoading(saveFeeBtn, false, "Save Custom Fee");
   }
+});
+
+/* ===========================
+   RESET FOR NEXT LEARNER
+=========================== */
+function resetForNextLearner() {
+  // Clear selected learner
+  selectedLearner = null;
+  
+  // Clear search input
+  searchInput.value = "";
+  searchInput.focus();
+  
+  // Hide form sections
+  learnerDetails.classList.add("hidden");
+  customFeeCard.classList.add("hidden");
+  
+  // Reset form
+  customFeeForm.reset();
+  customAmountSection.classList.add("hidden");
+  reasonSection.classList.add("hidden");
+  
+  // Show helpful message
+  showAlert("Ready to search for next learner", "info");
+}
+
+// Next Learner button click handler
+document.getElementById("nextLearnerBtn").addEventListener("click", () => {
+  resetForNextLearner();
 });
 
 /* ===========================
