@@ -22,12 +22,13 @@
     <div class="card">
       <h2>Search Learner for Fee Adjustment</h2>
       <p class="text-muted mb-20">Set custom fees for sponsored learners or those with special arrangements</p>
-      <div style="display: flex; gap: 12px;">
+      <div class="search-wrapper">
         <div class="autocomplete-container">
           <input 
             type="text" 
             id="searchInput" 
-            placeholder="Type learner's name or admission number..." 
+            class="search-input-large"
+            placeholder="🔍 Start typing learner's name or admission number..." 
             autocomplete="off"
           />
           <div id="autocompleteDropdown" class="autocomplete-dropdown hidden"></div>
@@ -39,7 +40,12 @@
     
     <!-- CUSTOM FEE FORM -->
     <div class="card hidden" id="customFeeCard">
-      <h2>Set Custom Fee</h2>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">Set Custom Fee</h2>
+        <button type="button" id="nextLearnerBtn" class="btn btn-secondary" style="width: auto;">
+          Next Learner →
+        </button>
+      </div>
       <form id="customFeeForm">
         <div style="background: var(--background); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 16px;">
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
