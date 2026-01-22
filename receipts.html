@@ -21,12 +21,13 @@
     <div class="card">
       <h2>Generate Fee Payment Receipt</h2>
       <p class="text-muted mb-20">Type the learner's name or admission number to generate a receipt for printing on 9.5" x 11" payslip</p>
-      <div style="display: flex; gap: 12px;">
+      <div class="search-wrapper">
         <div class="autocomplete-container">
           <input 
             type="text" 
             id="receiptSearch" 
-            placeholder="Type learner's name or admission number..." 
+            class="search-input-large"
+            placeholder="🔍 Start typing learner's name or admission number..." 
             autocomplete="off"
           />
           <div id="autocompleteDropdown" class="autocomplete-dropdown hidden"></div>
