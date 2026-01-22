@@ -348,7 +348,7 @@ searchInput.addEventListener("keypress", (e) => {
 });
 
 /* ===========================
-   RENDER RECEIPT - 9.5" x 11" PAYSLIP FORMAT
+   RENDER RECEIPT - A4 PAPER (2 RECEIPTS)
 =========================== */
 function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, feeInfo = null) {
   const paymentRows = payments.map(p => {
@@ -366,7 +366,7 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
       <tr>
         <td>${date}</td>
         <td>${ref}</td>
-        <td style="text-align: right;">KES ${amount}</td>
+        <td class="text-right">KES ${amount}</td>
       </tr>
     `;
   }).join("");
@@ -381,23 +381,23 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
     }[feeInfo.type] || 'Custom Fee';
     
     feeNoteHtml = `
-      <div style="background: #fffbeb; border: 1px solid #fbbf24; padding: 12px; border-radius: 6px; margin: 15px 0;">
+      <div class="fee-note-box">
         <strong>📋 ${feeTypeLabel}</strong>
-        ${feeInfo.reason ? `<br><em style="font-size: 0.9em;">${feeInfo.reason}</em>` : ''}
+        ${feeInfo.reason ? `<br><em>${feeInfo.reason}</em>` : ''}
       </div>
     `;
   }
   
-  container.innerHTML = `
+  // Create single receipt HTML
+  const receiptHTML = `
     <div class="receipt-header">
       <h1>LITTLE ANGELS ACADEMY</h1>
-      <p><em>Quality Education, Service and Discipline</em></p>
-      <p>P.O. Box 7093, Thika</p>
-      <p>Tel: 0720 985 433</p>
+      <p class="motto">Quality Education, Service and Discipline</p>
+      <p class="contact">P.O. Box 7093, Thika | Tel: 0720 985 433</p>
     </div>
     
     <div class="receipt-body">
-      <h2 style="text-align: center; margin: 20px 0; text-decoration: underline;">FEE PAYMENT RECEIPT</h2>
+      <div class="receipt-title">FEE PAYMENT RECEIPT</div>
       
       <div class="info-section">
         <div class="info-row">
@@ -420,13 +420,12 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
       
       ${feeNoteHtml}
       
-      <h3 style="margin: 25px 0 15px 0;">Payment Details:</h3>
       <table class="payment-table">
         <thead>
           <tr>
             <th>Payment Date</th>
             <th>Reference No.</th>
-            <th style="text-align: right;">Amount</th>
+            <th class="text-right">Amount</th>
           </tr>
         </thead>
         <tbody>
@@ -445,45 +444,41 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
         </div>
         <div class="summary-row total">
           <span>Balance ${balance > 0 ? 'Due' : balance < 0 ? 'Overpayment' : 'Cleared'}:</span>
-          <span style="color: ${balance > 0 ? '#000' : balance < 0 ? '#000' : '#000'};">
-            KES ${Math.abs(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}
-          </span>
+          <span>KES ${Math.abs(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
         </div>
       </div>
       
       <div class="signature-section">
         <div class="signature-box">
-          <div class="signature-line">
-            Received By
-          </div>
+          <div class="signature-line">Received By</div>
         </div>
         <div class="signature-box">
-          <div class="signature-line">
-            Date: ${new Date().toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
-          </div>
+          <div class="signature-line">Date: ${new Date().toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })}</div>
         </div>
       </div>
     </div>
     
     <div class="receipt-footer">
       <p><strong>Thank you for your payment</strong></p>
-      <p style="margin-top: 10px; font-size: 8pt;">
-        This is an official receipt from Little Angels Academy. Please retain for your records.
-      </p>
-      <p style="margin-top: 5px; font-size: 8pt;">
-        Printed on: ${new Date().toLocaleString('en-US', { 
-          year: 'numeric', 
-          month: 'long', 
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit'
-        })}
-      </p>
+      <p style="margin-top: 4px;">This is an official receipt from Little Angels Academy. Please retain for your records.</p>
+      <p style="margin-top: 4px;">Printed: ${new Date().toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })}</p>
     </div>
+  `;
+  
+  // Render 2 copies of the same receipt
+  container.innerHTML = `
+    <div class="receipt">${receiptHTML}</div>
+    <div class="receipt">${receiptHTML}</div>
   `;
   
   container.classList.remove("hidden");
