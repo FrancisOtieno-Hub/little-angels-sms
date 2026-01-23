@@ -19,6 +19,8 @@ let activeTerm = null;
 let autocompleteTimeout = null;
 let allLearners = [];
 
+console.log("Fee Payments page script loaded"); // Debug log
+
 /* ===========================
    UTILITIES
 =========================== */
@@ -88,6 +90,7 @@ async function loadActiveTerm() {
    AUTOCOMPLETE FUNCTIONALITY
 =========================== */
 async function loadAllLearners() {
+  console.log("Starting to load learners..."); // Debug log
   try {
     const { data, error } = await supabase
       .from("learners")
@@ -102,13 +105,25 @@ async function loadAllLearners() {
       .eq("active", true)
       .order("first_name");
     
-    if (error) throw error;
+    console.log("Supabase response:", { data, error }); // Debug log
+    
+    if (error) {
+      console.error("Supabase error:", error);
+      throw error;
+    }
     
     allLearners = data || [];
-    console.log("Loaded learners:", allLearners.length); // Debug log
+    console.log("✓ Loaded learners:", allLearners.length); // Debug log
+    
+    if (allLearners.length > 0) {
+      console.log("Sample learner:", allLearners[0]); // Debug log
+    }
+    
+    return allLearners;
   } catch (error) {
     console.error("Error loading learners:", error);
     showAlert("Error loading learners: " + error.message, "error");
+    return [];
   }
 }
 
@@ -530,10 +545,27 @@ async function loadPaymentHistory() {
    INIT
 =========================== */
 async function initPage() {
-  await checkAuth();
-  await loadActiveTerm();
-  await loadAllLearners(); // Make sure this completes before user can search
-  console.log("Page initialized with", allLearners.length, "learners");
+  console.log("Initializing Fee Payments page...");
+  
+  try {
+    await checkAuth();
+    console.log("✓ Auth check complete");
+    
+    await loadActiveTerm();
+    console.log("✓ Active term loaded");
+    
+    const learners = await loadAllLearners();
+    console.log("✓ Learners loaded:", learners.length);
+    
+    if (learners.length === 0) {
+      showAlert("No active learners found in database. Please register learners first.", "error");
+    }
+    
+    console.log("✓ Page initialization complete");
+  } catch (error) {
+    console.error("Error initializing page:", error);
+    showAlert("Error initializing page: " + error.message, "error");
+  }
 }
 
 initPage(); // Load learners for autocomplete
