@@ -1,5 +1,7 @@
 import { supabase } from "./supabase.js";
 
+console.log("=== FEE PAYMENTS PAGE LOADED ===");
+
 const searchInput = document.getElementById("searchInput");
 const autocompleteDropdown = document.getElementById("autocompleteDropdown");
 const learnerDetails = document.getElementById("learnerDetails");
@@ -9,7 +11,6 @@ const paymentForm = document.getElementById("paymentForm");
 const historyTable = document.getElementById("paymentHistory");
 const alertContainer = document.getElementById("alertContainer");
 const paymentBtn = document.getElementById("paymentBtn");
-
 const paymentDate = document.getElementById("paymentDate");
 const referenceNo = document.getElementById("referenceNo");
 const amountPaid = document.getElementById("amountPaid");
@@ -19,27 +20,21 @@ let activeTerm = null;
 let autocompleteTimeout = null;
 let allLearners = [];
 
-console.log("Fee Payments page script loaded"); // Debug log
+console.log("Variables initialized");
 
 /* ===========================
    UTILITIES
 =========================== */
 function showAlert(message, type = "success") {
-  alertContainer.innerHTML = `
-    <div class="alert alert-${type}">
-      ${message}
-    </div>
-  `;
-  setTimeout(() => {
-    alertContainer.innerHTML = "";
-  }, 5000);
+  alertContainer.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+  setTimeout(() => { alertContainer.innerHTML = ""; }, 5000);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function setLoading(button, loading, text = "Search") {
+function setLoading(button, loading, text = "Save") {
   button.disabled = loading;
   button.innerHTML = loading 
-    ? '<div class="spinner"></div><span>Loading...</span>' 
+    ? '<div class="spinner"></div><span>Processing...</span>' 
     : `<span>${text}</span>`;
 }
 
@@ -48,9 +43,7 @@ function setLoading(button, loading, text = "Search") {
 =========================== */
 async function checkAuth() {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    window.location.href = "/";
-  }
+  if (!session) window.location.href = "/";
 }
 
 document.getElementById("logoutBtn").addEventListener("click", async () => {
@@ -65,19 +58,12 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
 =========================== */
 async function loadActiveTerm() {
   try {
-    const { data, error } = await supabase
-      .from("terms")
-      .select("*")
-      .eq("active", true)
-      .maybeSingle();
-
+    const { data, error } = await supabase.from("terms").select("*").eq("active", true).maybeSingle();
     if (error) throw error;
-
     if (!data) {
-      showAlert("No active term found! Please set an active term in the Fees Setup.", "error");
+      showAlert("No active term found! Please set an active term first.", "error");
       return null;
     }
-
     activeTerm = data;
     return activeTerm;
   } catch (error) {
@@ -87,38 +73,20 @@ async function loadActiveTerm() {
 }
 
 /* ===========================
-   AUTOCOMPLETE FUNCTIONALITY
+   AUTOCOMPLETE
 =========================== */
 async function loadAllLearners() {
-  console.log("Starting to load learners..."); // Debug log
+  console.log("Loading learners...");
   try {
     const { data, error } = await supabase
       .from("learners")
-      .select(`
-        id,
-        admission_no,
-        first_name,
-        last_name,
-        class_id,
-        classes(name)
-      `)
+      .select("id, admission_no, first_name, last_name, class_id, classes(name)")
       .eq("active", true)
       .order("first_name");
     
-    console.log("Supabase response:", { data, error }); // Debug log
-    
-    if (error) {
-      console.error("Supabase error:", error);
-      throw error;
-    }
-    
+    if (error) throw error;
     allLearners = data || [];
-    console.log("✓ Loaded learners:", allLearners.length); // Debug log
-    
-    if (allLearners.length > 0) {
-      console.log("Sample learner:", allLearners[0]); // Debug log
-    }
-    
+    console.log("Loaded", allLearners.length, "learners");
     return allLearners;
   } catch (error) {
     console.error("Error loading learners:", error);
@@ -129,9 +97,7 @@ async function loadAllLearners() {
 
 function showAutocomplete(results) {
   if (results.length === 0) {
-    autocompleteDropdown.innerHTML = `
-      <div class="autocomplete-no-results">No learners found</div>
-    `;
+    autocompleteDropdown.innerHTML = '<div class="autocomplete-no-results">No learners found</div>';
     autocompleteDropdown.classList.remove("hidden");
     return;
   }
@@ -139,19 +105,14 @@ function showAutocomplete(results) {
   autocompleteDropdown.innerHTML = results.map((learner, index) => `
     <div class="autocomplete-item" data-index="${index}">
       <span class="learner-name">${learner.first_name} ${learner.last_name}</span>
-      <span class="learner-details">
-        ${learner.admission_no} • ${learner.classes?.name || 'N/A'}
-      </span>
+      <span class="learner-details">${learner.admission_no} • ${learner.classes?.name || 'N/A'}</span>
     </div>
   `).join('');
   
   autocompleteDropdown.classList.remove("hidden");
   
-  // Add click handlers to items
   document.querySelectorAll('.autocomplete-item').forEach((item, index) => {
-    item.addEventListener('click', () => {
-      selectLearnerFromAutocomplete(results[index]);
-    });
+    item.addEventListener('click', () => selectLearnerFromAutocomplete(results[index]));
   });
 }
 
@@ -163,38 +124,28 @@ function selectLearnerFromAutocomplete(learner) {
   searchInput.value = `${learner.first_name} ${learner.last_name} (${learner.admission_no})`;
   selectedLearner = learner;
   hideAutocomplete();
-  
-  // Automatically display learner details
   displayLearnerDetails();
   loadPaymentHistory();
   paymentDate.valueAsDate = new Date();
 }
 
 function filterLearners(query) {
-  if (!query || query.length < 2) {
-    return [];
-  }
-  
+  if (!query || query.length < 2) return [];
   const searchQuery = query.toLowerCase();
+  console.log("Searching for:", searchQuery, "in", allLearners.length, "learners");
   
   return allLearners.filter(learner => {
     const fullName = `${learner.first_name} ${learner.last_name}`.toLowerCase();
     const admissionNo = learner.admission_no.toLowerCase();
-    
     return fullName.includes(searchQuery) || admissionNo.includes(searchQuery);
-  }).slice(0, 10); // Limit to 10 results
+  }).slice(0, 10);
 }
 
-// Input event for autocomplete
 searchInput.addEventListener('input', (e) => {
   const query = e.target.value.trim();
   
-  // Clear previous timeout
-  if (autocompleteTimeout) {
-    clearTimeout(autocompleteTimeout);
-  }
+  if (autocompleteTimeout) clearTimeout(autocompleteTimeout);
   
-  // Reset selected learner if input changes
   if (selectedLearner && !query.includes(selectedLearner.admission_no)) {
     selectedLearner = null;
     learnerDetails.classList.add("hidden");
@@ -207,21 +158,17 @@ searchInput.addEventListener('input', (e) => {
     return;
   }
   
-  // Debounce the search
   autocompleteTimeout = setTimeout(() => {
     const results = filterLearners(query);
+    console.log("Found", results.length, "results");
     showAutocomplete(results);
   }, 300);
 });
 
-// Close autocomplete when clicking outside
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.autocomplete-container')) {
-    hideAutocomplete();
-  }
+  if (!e.target.closest('.autocomplete-container')) hideAutocomplete();
 });
 
-// Keyboard navigation for autocomplete
 searchInput.addEventListener('keydown', (e) => {
   const items = autocompleteDropdown.querySelectorAll('.autocomplete-item');
   const selectedItem = autocompleteDropdown.querySelector('.autocomplete-item.selected');
@@ -244,85 +191,10 @@ searchInput.addEventListener('keydown', (e) => {
     return;
   }
   
-  // Update selected class
   items.forEach(item => item.classList.remove('selected'));
   if (currentIndex >= 0 && items[currentIndex]) {
     items[currentIndex].classList.add('selected');
     items[currentIndex].scrollIntoView({ block: 'nearest' });
-  }
-});
-
-/* ===========================
-   SEARCH LEARNER
-=========================== */
-searchBtn.addEventListener("click", async () => {
-  // If learner already selected from autocomplete, skip search
-  if (selectedLearner) {
-    await displayLearnerDetails();
-    await loadPaymentHistory();
-    paymentDate.valueAsDate = new Date();
-    return;
-  }
-  
-  const query = searchInput.value.trim();
-  
-  if (!query) {
-    showAlert("Please enter an admission number or name", "error");
-    return;
-  }
-
-  setLoading(searchBtn, true, "Search");
-
-  try {
-    // Ensure active term is loaded first
-    await loadActiveTerm();
-    if (!activeTerm) {
-      setLoading(searchBtn, false, "Search");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("learners")
-      .select(`
-        id,
-        admission_no,
-        first_name,
-        last_name,
-        class_id,
-        classes(name)
-      `)
-      .or(`admission_no.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%`)
-      .eq("active", true)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    if (!data) {
-      showAlert("Learner not found", "error");
-      learnerDetails.classList.add("hidden");
-      paymentCard.classList.add("hidden");
-      historyCard.classList.add("hidden");
-      setLoading(searchBtn, false, "Search");
-      return;
-    }
-
-    selectedLearner = data;
-    await displayLearnerDetails();
-    await loadPaymentHistory();
-    
-    // Set default payment date to today
-    paymentDate.valueAsDate = new Date();
-  } catch (error) {
-    showAlert("Error searching learner: " + error.message, "error");
-  } finally {
-    setLoading(searchBtn, false, "Search");
-  }
-});
-
-// Allow Enter key to search (only if autocomplete is not visible)
-searchInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter" && autocompleteDropdown.classList.contains('hidden')) {
-    searchBtn.click();
   }
 });
 
@@ -333,7 +205,6 @@ async function displayLearnerDetails() {
   if (!selectedLearner || !activeTerm) return;
 
   try {
-    // Check for custom fee first
     const { data: customFeeData } = await supabase
       .from("custom_fees")
       .select("custom_amount, fee_type, reason")
@@ -345,7 +216,6 @@ async function displayLearnerDetails() {
     let feeNote = "";
 
     if (customFeeData) {
-      // Use custom fee
       totalFees = Number(customFeeData.custom_amount);
       const feeTypeLabel = {
         'full_sponsorship': 'Full Sponsorship',
@@ -358,18 +228,15 @@ async function displayLearnerDetails() {
         feeNote += `<br><span style="font-size: 0.9rem; color: var(--text-secondary);">${customFeeData.reason}</span>`;
       }
     } else {
-      // Fetch regular class fee
       const { data: feeData } = await supabase
         .from("fees")
         .select("amount")
         .eq("class_id", selectedLearner.class_id)
         .eq("term_id", activeTerm.id)
         .maybeSingle();
-
       totalFees = feeData?.amount || 0;
     }
 
-    // Fetch payments
     const { data: payments } = await supabase
       .from("payments")
       .select("amount")
@@ -381,9 +248,7 @@ async function displayLearnerDetails() {
 
     learnerDetails.innerHTML = `
       <div style="padding: 20px; background: var(--background); border-radius: var(--radius-sm); border-left: 4px solid var(--primary);">
-        <h3 style="margin-bottom: 12px; color: var(--primary);">
-          ${selectedLearner.first_name} ${selectedLearner.last_name}
-        </h3>
+        <h3 style="margin-bottom: 12px; color: var(--primary);">${selectedLearner.first_name} ${selectedLearner.last_name}</h3>
         <p><strong>Admission No:</strong> ${selectedLearner.admission_no}</p>
         <p><strong>Class:</strong> ${selectedLearner.classes?.name || 'N/A'}</p>
         <p><strong>Term:</strong> Year ${activeTerm.year} - Term ${activeTerm.term}${feeNote}</p>
@@ -399,9 +264,7 @@ async function displayLearnerDetails() {
           </div>
           <div>
             <p class="text-muted" style="font-size: 0.85rem;">Balance</p>
-            <p style="font-size: 1.3rem; font-weight: 700; color: ${balance > 0 ? 'var(--danger)' : 'var(--success)'};">
-              KES ${balance.toLocaleString()}
-            </p>
+            <p style="font-size: 1.3rem; font-weight: 700; color: ${balance > 0 ? 'var(--danger)' : 'var(--success)'};">KES ${balance.toLocaleString()}</p>
           </div>
         </div>
       </div>
@@ -420,14 +283,12 @@ async function displayLearnerDetails() {
 =========================== */
 paymentForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-
   if (!selectedLearner || !activeTerm) {
     showAlert("Please search for a learner first", "error");
     return;
   }
 
   const amount = parseFloat(amountPaid.value);
-  
   if (amount <= 0) {
     showAlert("Amount must be greater than zero", "error");
     return;
@@ -444,27 +305,17 @@ paymentForm.addEventListener("submit", async (e) => {
       amount: amount
     };
 
-    const { error } = await supabase
-      .from("payments")
-      .insert([payment]);
-
+    const { error } = await supabase.from("payments").insert([payment]);
     if (error) throw error;
 
     showAlert(`✓ Payment of KES ${amount.toLocaleString()} recorded successfully for ${selectedLearner.first_name} ${selectedLearner.last_name}`);
     
-    // Update the current learner's details and history
     await displayLearnerDetails();
     await loadPaymentHistory();
-    
-    // Clear only the payment form
     paymentForm.reset();
     paymentDate.valueAsDate = new Date();
     
-    // After 2 seconds, clear everything for next learner
-    setTimeout(() => {
-      resetForNextLearner();
-    }, 2000);
-    
+    setTimeout(() => resetForNextLearner(), 2000);
   } catch (error) {
     showAlert("Error saving payment: " + error.message, "error");
   } finally {
@@ -476,29 +327,17 @@ paymentForm.addEventListener("submit", async (e) => {
    RESET FOR NEXT LEARNER
 =========================== */
 function resetForNextLearner() {
-  // Clear selected learner
   selectedLearner = null;
-  
-  // Clear search input
   searchInput.value = "";
   searchInput.focus();
-  
-  // Hide all sections
   learnerDetails.classList.add("hidden");
   paymentCard.classList.add("hidden");
   historyCard.classList.add("hidden");
-  
-  // Clear payment form
   paymentForm.reset();
-  
-  // Show helpful message
   showAlert("Ready to search for next learner", "info");
 }
 
-// Next Learner button click handler
-document.getElementById("nextLearnerBtn").addEventListener("click", () => {
-  resetForNextLearner();
-});
+document.getElementById("nextLearnerBtn").addEventListener("click", () => resetForNextLearner());
 
 /* ===========================
    LOAD PAYMENT HISTORY
@@ -508,7 +347,6 @@ async function loadPaymentHistory() {
 
   try {
     historyTable.innerHTML = "";
-
     const { data, error } = await supabase
       .from("payments")
       .select("*")
@@ -519,11 +357,7 @@ async function loadPaymentHistory() {
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      historyTable.innerHTML = `
-        <tr>
-          <td colspan="3" class="text-center text-muted">No payments recorded yet</td>
-        </tr>
-      `;
+      historyTable.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No payments recorded yet</td></tr>';
       return;
     }
 
@@ -545,27 +379,19 @@ async function loadPaymentHistory() {
    INIT
 =========================== */
 async function initPage() {
-  console.log("Initializing Fee Payments page...");
-  
+  console.log("Initializing page...");
   try {
     await checkAuth();
-    console.log("✓ Auth check complete");
+    console.log("Auth OK");
     
     await loadActiveTerm();
-    console.log("✓ Active term loaded");
+    console.log("Active term loaded");
     
-    const learners = await loadAllLearners();
-    console.log("✓ Learners loaded:", learners.length);
-    
-    if (learners.length === 0) {
-      showAlert("No active learners found in database. Please register learners first.", "error");
-    }
-    
-    console.log("✓ Page initialization complete");
+    await loadAllLearners();
+    console.log("Page ready!");
   } catch (error) {
-    console.error("Error initializing page:", error);
-    showAlert("Error initializing page: " + error.message, "error");
+    console.error("Init error:", error);
   }
 }
 
-initPage(); // Load learners for autocomplete
+initPage();
