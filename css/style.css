@@ -648,27 +648,29 @@ table tbody tr:last-child td {
   }
   
   .receipt-container {
-    width: 100%;
-    height: 100vh;
+    width: 210mm;
+    height: 297mm;
     display: flex;
     flex-direction: column;
+    page-break-after: always;
   }
   
   .receipt {
-    width: 100%;
-    height: 50vh;
-    padding: 20px 30px;
+    width: 210mm;
+    height: 148.5mm;
+    padding: 15mm 12mm;
     box-sizing: border-box;
     font-family: Arial, sans-serif;
-    font-size: 11pt;
-    line-height: 1.4;
+    font-size: 10pt;
+    line-height: 1.3;
     color: black !important;
     page-break-inside: avoid;
     position: relative;
+    overflow: hidden;
   }
   
   .receipt:first-child {
-    border-bottom: 1px dashed #999;
+    border-bottom: 2px dashed #999;
   }
   
   .receipt * {
@@ -678,132 +680,147 @@ table tbody tr:last-child td {
   .receipt-header {
     text-align: center;
     border-bottom: 2px solid #000;
-    padding-bottom: 12px;
-    margin-bottom: 15px;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
   }
   
   .receipt-header h1 {
-    font-size: 16pt;
+    font-size: 14pt;
     font-weight: bold;
-    margin: 0 0 4px 0;
+    margin: 0 0 3px 0;
     letter-spacing: 0.5px;
   }
   
   .receipt-header .motto {
-    font-size: 9pt;
+    font-size: 8pt;
     font-style: italic;
-    margin: 3px 0;
-  }
-  
-  .receipt-header .contact {
-    font-size: 9pt;
     margin: 2px 0;
   }
   
+  .receipt-header .contact {
+    font-size: 8pt;
+    margin: 1px 0;
+  }
+  
   .receipt-body {
-    margin: 15px 0;
+    margin: 10px 0;
   }
   
   .receipt-title {
     text-align: center;
-    font-size: 13pt;
+    font-size: 11pt;
     font-weight: bold;
     text-decoration: underline;
-    margin: 12px 0;
+    margin: 8px 0;
   }
   
   .info-section {
-    margin-bottom: 15px;
+    margin-bottom: 10px;
   }
   
   .info-row {
     display: flex;
-    margin-bottom: 6px;
-    font-size: 10pt;
+    margin-bottom: 4px;
+    font-size: 9pt;
   }
   
   .info-label {
-    width: 130px;
+    width: 110px;
     font-weight: 600;
   }
   
   .info-value {
     flex: 1;
     border-bottom: 1px dotted #333;
-    padding-bottom: 2px;
+    padding-bottom: 1px;
   }
   
   .fee-note-box {
     background: #f9fafb;
     border: 1px solid #d1d5db;
-    padding: 8px 10px;
-    border-radius: 4px;
-    margin: 10px 0;
-    font-size: 9pt;
-  }
-  
-  .payment-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 12px 0;
-    font-size: 9.5pt;
-  }
-  
-  .payment-table th,
-  .payment-table td {
-    border: 1px solid #000;
     padding: 6px 8px;
-    text-align: left;
+    border-radius: 3px;
+    margin: 8px 0;
+    font-size: 8pt;
   }
   
-  .payment-table th {
-    background: #f3f4f6;
+  /* Horizontal payment layout */
+  .payments-horizontal {
+    margin: 10px 0;
+    padding: 8px;
+    background: #f9fafb;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .payments-horizontal h3 {
+    font-size: 9pt;
     font-weight: bold;
-    font-size: 9pt;
+    margin: 0 0 6px 0;
+    text-align: center;
   }
   
-  .payment-table td {
-    font-size: 9pt;
+  .payment-items {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
   }
   
-  .payment-table .text-right {
-    text-align: right;
+  .payment-item {
+    display: inline-block;
+    padding: 4px 8px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    font-size: 8pt;
+    white-space: nowrap;
+  }
+  
+  .payment-item .date {
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .payment-item .amount {
+    color: #059669;
+    font-weight: bold;
   }
   
   .summary-section {
-    margin-top: 15px;
-    padding-top: 10px;
+    margin-top: 10px;
+    padding-top: 8px;
     border-top: 2px solid #000;
   }
   
   .summary-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 6px;
-    font-size: 10pt;
+    margin-bottom: 4px;
+    font-size: 9pt;
   }
   
   .summary-row.total {
-    font-size: 11pt;
+    font-size: 10pt;
     font-weight: bold;
-    margin-top: 8px;
-    padding-top: 8px;
+    margin-top: 6px;
+    padding-top: 6px;
     border-top: 1px solid #000;
   }
   
   .receipt-footer {
-    margin-top: 15px;
-    padding-top: 12px;
+    margin-top: 10px;
+    padding-top: 8px;
     border-top: 1px solid #000;
-    font-size: 8pt;
+    font-size: 7pt;
     text-align: center;
   }
   
   .signature-section {
     display: flex;
     justify-content: space-between;
-    margin-top: 20px;
-    font-size: 9pt;
+    margin-top: 12px;
+    font-size: 8pt;
   }
   
   .signature-box {
@@ -813,8 +830,8 @@ table tbody tr:last-child td {
   
   .signature-line {
     border-top: 1px solid #000;
-    margin-top: 35px;
-    padding-top: 4px;
+    margin-top: 25px;
+    padding-top: 3px;
   }
   
   /* Cut line indicator */
@@ -825,9 +842,9 @@ table tbody tr:last-child td {
     left: 50%;
     transform: translateX(-50%);
     background: white;
-    padding: 0 10px;
-    font-size: 8pt;
+    padding: 0 8px;
+    font-size: 7pt;
     color: #666;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
   }
 }
