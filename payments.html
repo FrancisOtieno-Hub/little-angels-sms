@@ -21,18 +21,16 @@
     <!-- SEARCH LEARNER -->
     <div class="card">
       <h2>Search Learner</h2>
-      <div class="search-wrapper">
-        <div class="autocomplete-container">
-          <input 
-            type="text" 
-            id="searchInput" 
-            class="search-input-large"
-            placeholder="Start typing learner's name or admission number..." 
-            autocomplete="off"
-          />
-          <div id="autocompleteDropdown" class="autocomplete-dropdown hidden"></div>
-        </div>
-        <button id="searchBtn" class="btn btn-primary">Search</button>
+      <p class="text-muted mb-20">Start typing to search for a learner</p>
+      <div class="autocomplete-container">
+        <input 
+          type="text" 
+          id="searchInput" 
+          class="search-input-large"
+          placeholder="Start typing learner's name or admission number..." 
+          autocomplete="off"
+        />
+        <div id="autocompleteDropdown" class="autocomplete-dropdown hidden"></div>
       </div>
       <div id="learnerDetails" class="mt-20 hidden"></div>
     </div>
