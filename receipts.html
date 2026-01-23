@@ -19,7 +19,7 @@
     <div id="alertContainer"></div>
     
     <div class="card">
-      <h2>Generate Fee Payment Receipt</h2>
+      <h2>Search Learner</h2>
       <p class="text-muted mb-20">Generate receipt on A4 paper (2 copies per sheet - one for parent, one for school)</p>
       <div class="search-wrapper">
         <div class="autocomplete-container">
@@ -32,7 +32,40 @@
           />
           <div id="autocompleteDropdown" class="autocomplete-dropdown hidden"></div>
         </div>
+        <button id="searchBtn" class="btn btn-primary">Search</button>
+      </div>
+    </div>
+    
+    <!-- PAYMENT SELECTION -->
+    <div class="card hidden" id="paymentSelectionCard">
+      <h2>Select Payments to Include in Receipt</h2>
+      <p class="text-muted mb-20">Check the payments you want to include in the cumulative receipt</p>
+      
+      <div id="learnerInfo" class="mb-20"></div>
+      
+      <div style="background: var(--background); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
+          <input type="checkbox" id="selectAllPayments" style="width: 20px; height: 20px; cursor: pointer;">
+          <span style="font-weight: 600; font-size: 1rem;">Select All Payments</span>
+        </label>
+      </div>
+      
+      <div id="paymentsListContainer" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+        <table id="paymentsTable">
+          <thead style="position: sticky; top: 0; background: var(--background); z-index: 10;">
+            <tr>
+              <th style="width: 60px;">Select</th>
+              <th>Payment Date</th>
+              <th>Amount (KES)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      
+      <div style="margin-top: 20px; display: flex; gap: 12px; align-items: center;">
         <button id="generateReceiptBtn" class="btn btn-primary">Generate Receipt</button>
+        <span id="selectionCount" class="text-muted"></span>
       </div>
     </div>
   </div>
