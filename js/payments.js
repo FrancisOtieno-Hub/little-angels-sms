@@ -105,8 +105,10 @@ async function loadAllLearners() {
     if (error) throw error;
     
     allLearners = data || [];
+    console.log("Loaded learners:", allLearners.length); // Debug log
   } catch (error) {
     console.error("Error loading learners:", error);
+    showAlert("Error loading learners: " + error.message, "error");
   }
 }
 
@@ -527,6 +529,11 @@ async function loadPaymentHistory() {
 /* ===========================
    INIT
 =========================== */
-checkAuth();
-loadActiveTerm();
-loadAllLearners(); // Load learners for autocomplete
+async function initPage() {
+  await checkAuth();
+  await loadActiveTerm();
+  await loadAllLearners(); // Make sure this completes before user can search
+  console.log("Page initialized with", allLearners.length, "learners");
+}
+
+initPage(); // Load learners for autocomplete
