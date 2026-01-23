@@ -1,6 +1,5 @@
 import { supabase } from "./supabase.js";
 
-const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
 const autocompleteDropdown = document.getElementById("autocompleteDropdown");
 const learnerDetails = document.getElementById("learnerDetails");
@@ -175,6 +174,8 @@ function selectLearnerFromAutocomplete(learner) {
   searchInput.value = `${learner.first_name} ${learner.last_name} (${learner.admission_no})`;
   selectedLearner = learner;
   hideAutocomplete();
+  
+  // Automatically display learner details
   displayLearnerDetails();
 }
 
@@ -251,65 +252,13 @@ searchInput.addEventListener('keydown', (e) => {
 });
 
 /* ===========================
-   SEARCH & DISPLAY LEARNER
+   DISPLAY LEARNER DETAILS
 =========================== */
-searchBtn.addEventListener("click", async () => {
-  if (selectedLearner) {
-    await displayLearnerDetails();
-    return;
-  }
-  
-  const query = searchInput.value.trim();
-  
-  if (!query) {
-    showAlert("Please enter a learner's name or admission number", "error");
-    return;
-  }
-
-  setLoading(searchBtn, true, "Search");
-
-  try {
-    await loadActiveTerm();
-    if (!activeTerm) {
-      setLoading(searchBtn, false, "Search");
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from("learners")
-      .select(`
-        id,
-        admission_no,
-        first_name,
-        last_name,
-        class_id,
-        classes(name)
-      `)
-      .or(`admission_no.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%`)
-      .eq("active", true)
-      .maybeSingle();
-
-    if (error) throw error;
-
-    if (!data) {
-      showAlert("Learner not found", "error");
-      learnerDetails.classList.add("hidden");
-      customFeeCard.classList.add("hidden");
-      setLoading(searchBtn, false, "Search");
-      return;
-    }
-
-    selectedLearner = data;
-    await displayLearnerDetails();
-  } catch (error) {
-    showAlert("Error searching learner: " + error.message, "error");
-  } finally {
-    setLoading(searchBtn, false, "Search");
-  }
-});
-
 async function displayLearnerDetails() {
-  if (!selectedLearner || !activeTerm) return;
+  if (!selectedLearner || !activeTerm) {
+    await loadActiveTerm();
+    if (!activeTerm) return;
+  }
 
   try {
     // Fetch class fee
