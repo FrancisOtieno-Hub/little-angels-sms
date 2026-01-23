@@ -1,6 +1,5 @@
 import { supabase } from "./supabase.js";
 
-const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("searchInput");
 const autocompleteDropdown = document.getElementById("autocompleteDropdown");
 const learnerDetails = document.getElementById("learnerDetails");
@@ -148,7 +147,7 @@ function selectLearnerFromAutocomplete(learner) {
   selectedLearner = learner;
   hideAutocomplete();
   
-  // Automatically trigger display
+  // Automatically display learner details
   displayLearnerDetails();
   loadPaymentHistory();
   paymentDate.valueAsDate = new Date();
