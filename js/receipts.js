@@ -121,6 +121,9 @@ function selectLearnerFromAutocomplete(learner) {
   searchInput.value = `${learner.first_name} ${learner.last_name} (${learner.admission_no})`;
   selectedLearner = learner;
   hideAutocomplete();
+  
+  // Automatically load payments when learner is selected
+  loadPaymentsForLearner();
 }
 
 function filterLearners(query) {
@@ -221,58 +224,23 @@ async function getActiveTerm() {
 }
 
 /* ===========================
-   SEARCH & LOAD PAYMENTS
+   LOAD PAYMENTS FOR SELECTED LEARNER
 =========================== */
-searchBtn.addEventListener("click", async () => {
-  if (!selectedLearner) {
-    const query = searchInput.value.trim();
-    
-    if (!query) {
-      showAlert("Please select or enter a learner", "error");
-      return;
-    }
-    
-    setLoading(searchBtn, true);
-    
-    try {
-      const { data, error } = await supabase
-        .from("learners")
-        .select(`
-          id,
-          admission_no,
-          first_name,
-          last_name,
-          class_id,
-          classes(name)
-        `)
-        .or(`admission_no.ilike.%${query}%,first_name.ilike.%${query}%,last_name.ilike.%${query}%`)
-        .eq("active", true)
-        .maybeSingle();
-      
-      if (error) throw error;
-      
-      if (!data) {
-        showAlert("Learner not found", "error");
-        setLoading(searchBtn, false);
-        return;
-      }
-      
-      selectedLearner = data;
-    } catch (error) {
-      showAlert("Error searching learner: " + error.message, "error");
-      setLoading(searchBtn, false);
-      return;
-    }
-  } else {
-    setLoading(searchBtn, true);
-  }
+async function loadPaymentsForLearner() {
+  if (!selectedLearner) return;
   
   try {
     const term = await getActiveTerm();
-    if (!term) {
-      setLoading(searchBtn, false);
-      return;
-    }
+    if (!term) return;
+    
+    // Show loading state
+    paymentSelectionCard.classList.remove("hidden");
+    learnerInfo.innerHTML = `
+      <div style="padding: 16px; text-align: center; color: var(--text-secondary);">
+        <div class="spinner" style="display: inline-block;"></div>
+        <span style="margin-left: 10px;">Loading payments...</span>
+      </div>
+    `;
     
     // Fetch payments
     const { data: payments, error } = await supabase
@@ -285,8 +253,15 @@ searchBtn.addEventListener("click", async () => {
     if (error) throw error;
     
     if (!payments || payments.length === 0) {
-      showAlert("No payments found for this learner", "error");
-      setLoading(searchBtn, false);
+      learnerInfo.innerHTML = `
+        <div style="padding: 20px; background: #fee2e2; border: 2px solid #ef4444; border-radius: var(--radius-sm); text-align: center;">
+          <p style="color: #991b1b; font-weight: 600;">No payments found for this learner</p>
+          <p style="color: #991b1b; font-size: 0.9rem; margin-top: 8px;">
+            ${selectedLearner.first_name} ${selectedLearner.last_name} has not made any payments yet.
+          </p>
+        </div>
+      `;
+      paymentsTable.innerHTML = "";
       return;
     }
     
@@ -295,10 +270,14 @@ searchBtn.addEventListener("click", async () => {
     
   } catch (error) {
     showAlert("Error loading payments: " + error.message, "error");
-  } finally {
-    setLoading(searchBtn, false);
+    learnerInfo.innerHTML = `
+      <div style="padding: 20px; background: #fee2e2; border: 2px solid #ef4444; border-radius: var(--radius-sm);">
+        <p style="color: #991b1b; font-weight: 600;">Error loading payments</p>
+        <p style="color: #991b1b; font-size: 0.9rem; margin-top: 8px;">${error.message}</p>
+      </div>
+    `;
   }
-});
+}
 
 /* ===========================
    DISPLAY PAYMENT SELECTION
