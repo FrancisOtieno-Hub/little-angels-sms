@@ -1,14 +1,22 @@
 import { supabase } from "./supabase.js";
 
-const btn = document.getElementById("generateReceiptBtn");
+const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("receiptSearch");
 const autocompleteDropdown = document.getElementById("autocompleteDropdown");
 const container = document.getElementById("receiptContainer");
 const alertContainer = document.getElementById("alertContainer");
+const paymentSelectionCard = document.getElementById("paymentSelectionCard");
+const learnerInfo = document.getElementById("learnerInfo");
+const paymentsTable = document.getElementById("paymentsTable").querySelector("tbody");
+const selectAllPayments = document.getElementById("selectAllPayments");
+const generateReceiptBtn = document.getElementById("generateReceiptBtn");
+const selectionCount = document.getElementById("selectionCount");
 
 let selectedLearner = null;
 let autocompleteTimeout = null;
 let allLearners = [];
+let allPayments = [];
+let selectedPayments = [];
 
 /* ===========================
    UTILITIES
@@ -28,11 +36,11 @@ function showAlert(message, type = "success") {
   }
 }
 
-function setLoading(button, loading) {
+function setLoading(button, loading, text = "Search") {
   button.disabled = loading;
   button.innerHTML = loading 
-    ? '<div class="spinner"></div><span>Generating...</span>' 
-    : '<span>Generate Receipt</span>';
+    ? '<div class="spinner"></div><span>Loading...</span>' 
+    : `<span>${text}</span>`;
 }
 
 /* ===========================
@@ -98,7 +106,6 @@ function showAutocomplete(results) {
   
   autocompleteDropdown.classList.remove("hidden");
   
-  // Add click handlers to items
   document.querySelectorAll('.autocomplete-item').forEach((item, index) => {
     item.addEventListener('click', () => {
       selectLearnerFromAutocomplete(results[index]);
@@ -117,9 +124,7 @@ function selectLearnerFromAutocomplete(learner) {
 }
 
 function filterLearners(query) {
-  if (!query || query.length < 2) {
-    return [];
-  }
+  if (!query || query.length < 2) return [];
   
   const searchQuery = query.toLowerCase();
   
@@ -128,22 +133,20 @@ function filterLearners(query) {
     const admissionNo = learner.admission_no.toLowerCase();
     
     return fullName.includes(searchQuery) || admissionNo.includes(searchQuery);
-  }).slice(0, 10); // Limit to 10 results
+  }).slice(0, 10);
 }
 
-// Input event for autocomplete
 searchInput.addEventListener('input', (e) => {
   const query = e.target.value.trim();
   
-  // Clear previous timeout
   if (autocompleteTimeout) {
     clearTimeout(autocompleteTimeout);
   }
   
-  // Reset selected learner if input changes
   if (selectedLearner && !query.includes(selectedLearner.admission_no)) {
     selectedLearner = null;
     container.classList.add("hidden");
+    paymentSelectionCard.classList.add("hidden");
   }
   
   if (query.length < 2) {
@@ -151,21 +154,18 @@ searchInput.addEventListener('input', (e) => {
     return;
   }
   
-  // Debounce the search
   autocompleteTimeout = setTimeout(() => {
     const results = filterLearners(query);
     showAutocomplete(results);
   }, 300);
 });
 
-// Close autocomplete when clicking outside
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.autocomplete-container')) {
     hideAutocomplete();
   }
 });
 
-// Keyboard navigation for autocomplete
 searchInput.addEventListener('keydown', (e) => {
   const items = autocompleteDropdown.querySelectorAll('.autocomplete-item');
   const selectedItem = autocompleteDropdown.querySelector('.autocomplete-item.selected');
@@ -188,7 +188,6 @@ searchInput.addEventListener('keydown', (e) => {
     return;
   }
   
-  // Update selected class
   items.forEach(item => item.classList.remove('selected'));
   if (currentIndex >= 0 && items[currentIndex]) {
     items[currentIndex].classList.add('selected');
@@ -222,13 +221,10 @@ async function getActiveTerm() {
 }
 
 /* ===========================
-   GENERATE RECEIPT
+   SEARCH & LOAD PAYMENTS
 =========================== */
-btn.addEventListener("click", async () => {
-  // Use selected learner from autocomplete or search by input
-  let learnerToUse = selectedLearner;
-  
-  if (!learnerToUse) {
+searchBtn.addEventListener("click", async () => {
+  if (!selectedLearner) {
     const query = searchInput.value.trim();
     
     if (!query) {
@@ -236,8 +232,7 @@ btn.addEventListener("click", async () => {
       return;
     }
     
-    // Try to search if not selected from autocomplete
-    setLoading(btn, true);
+    setLoading(searchBtn, true);
     
     try {
       const { data, error } = await supabase
@@ -258,32 +253,161 @@ btn.addEventListener("click", async () => {
       
       if (!data) {
         showAlert("Learner not found", "error");
-        setLoading(btn, false);
+        setLoading(searchBtn, false);
         return;
       }
       
-      learnerToUse = data;
+      selectedLearner = data;
     } catch (error) {
       showAlert("Error searching learner: " + error.message, "error");
-      setLoading(btn, false);
+      setLoading(searchBtn, false);
       return;
     }
   } else {
-    setLoading(btn, true);
+    setLoading(searchBtn, true);
   }
   
   try {
     const term = await getActiveTerm();
     if (!term) {
-      setLoading(btn, false);
+      setLoading(searchBtn, false);
       return;
     }
     
-    // Check for custom fee first
+    // Fetch payments
+    const { data: payments, error } = await supabase
+      .from("payments")
+      .select("*")
+      .eq("learner_id", selectedLearner.id)
+      .eq("term_id", term.id)
+      .order("payment_date");
+    
+    if (error) throw error;
+    
+    if (!payments || payments.length === 0) {
+      showAlert("No payments found for this learner", "error");
+      setLoading(searchBtn, false);
+      return;
+    }
+    
+    allPayments = payments;
+    displayPaymentSelection(selectedLearner, term);
+    
+  } catch (error) {
+    showAlert("Error loading payments: " + error.message, "error");
+  } finally {
+    setLoading(searchBtn, false);
+  }
+});
+
+/* ===========================
+   DISPLAY PAYMENT SELECTION
+=========================== */
+function displayPaymentSelection(learner, term) {
+  learnerInfo.innerHTML = `
+    <div style="padding: 16px; background: var(--background); border-radius: var(--radius-sm); border-left: 4px solid var(--primary);">
+      <h3 style="margin-bottom: 8px; color: var(--primary);">
+        ${learner.first_name} ${learner.last_name}
+      </h3>
+      <p style="margin: 4px 0;"><strong>Admission No:</strong> ${learner.admission_no}</p>
+      <p style="margin: 4px 0;"><strong>Class:</strong> ${learner.classes?.name || 'N/A'}</p>
+      <p style="margin: 4px 0;"><strong>Term:</strong> Year ${term.year} - Term ${term.term}</p>
+    </div>
+  `;
+  
+  paymentsTable.innerHTML = "";
+  selectedPayments = [];
+  
+  allPayments.forEach((payment, index) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td style="text-align: center;">
+        <input type="checkbox" class="payment-checkbox" data-index="${index}" 
+               style="width: 18px; height: 18px; cursor: pointer;">
+      </td>
+      <td>${new Date(payment.payment_date).toLocaleDateString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric' 
+      })}</td>
+      <td>KES ${Number(payment.amount).toLocaleString()}</td>
+    `;
+    paymentsTable.appendChild(tr);
+  });
+  
+  // Add event listeners to checkboxes
+  document.querySelectorAll('.payment-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateSelection);
+  });
+  
+  paymentSelectionCard.classList.remove("hidden");
+  updateSelectionCount();
+}
+
+/* ===========================
+   SELECT ALL FUNCTIONALITY
+=========================== */
+selectAllPayments.addEventListener('change', (e) => {
+  const checkboxes = document.querySelectorAll('.payment-checkbox');
+  checkboxes.forEach(checkbox => {
+    checkbox.checked = e.target.checked;
+  });
+  updateSelection();
+});
+
+/* ===========================
+   UPDATE SELECTION
+=========================== */
+function updateSelection() {
+  selectedPayments = [];
+  document.querySelectorAll('.payment-checkbox:checked').forEach(checkbox => {
+    const index = parseInt(checkbox.dataset.index);
+    selectedPayments.push(allPayments[index]);
+  });
+  
+  updateSelectionCount();
+  
+  // Update "Select All" checkbox
+  const totalCheckboxes = document.querySelectorAll('.payment-checkbox').length;
+  const checkedCheckboxes = document.querySelectorAll('.payment-checkbox:checked').length;
+  selectAllPayments.checked = totalCheckboxes === checkedCheckboxes;
+  selectAllPayments.indeterminate = checkedCheckboxes > 0 && checkedCheckboxes < totalCheckboxes;
+}
+
+function updateSelectionCount() {
+  if (selectedPayments.length === 0) {
+    selectionCount.textContent = "No payments selected";
+    selectionCount.style.color = "var(--danger)";
+  } else {
+    const total = selectedPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+    selectionCount.textContent = `${selectedPayments.length} payment(s) selected • Total: KES ${total.toLocaleString()}`;
+    selectionCount.style.color = "var(--success)";
+  }
+}
+
+/* ===========================
+   GENERATE RECEIPT
+=========================== */
+generateReceiptBtn.addEventListener("click", async () => {
+  if (selectedPayments.length === 0) {
+    showAlert("Please select at least one payment", "error");
+    return;
+  }
+  
+  setLoading(generateReceiptBtn, true, "Generate Receipt");
+  
+  try {
+    const term = await getActiveTerm();
+    if (!term) {
+      setLoading(generateReceiptBtn, false, "Generate Receipt");
+      return;
+    }
+    
+    // Check for custom fee
     const { data: customFeeData } = await supabase
       .from("custom_fees")
       .select("custom_amount, fee_type, reason")
-      .eq("learner_id", learnerToUse.id)
+      .eq("learner_id", selectedLearner.id)
       .eq("term_id", term.id)
       .maybeSingle();
 
@@ -291,44 +415,27 @@ btn.addEventListener("click", async () => {
     let feeInfo = null;
 
     if (customFeeData) {
-      // Use custom fee
       totalFees = Number(customFeeData.custom_amount);
       feeInfo = {
         type: customFeeData.fee_type,
         reason: customFeeData.reason
       };
     } else {
-      // Fetch regular class fee
       const { data: fee } = await supabase
         .from("fees")
         .select("amount")
-        .eq("class_id", learnerToUse.class_id)
+        .eq("class_id", selectedLearner.class_id)
         .eq("term_id", term.id)
         .maybeSingle();
       
       totalFees = fee?.amount || 0;
     }
     
-    // Fetch payments
-    const { data: payments } = await supabase
-      .from("payments")
-      .select("*")
-      .eq("learner_id", learnerToUse.id)
-      .eq("term_id", term.id)
-      .order("payment_date");
-    
-    if (!payments || payments.length === 0) {
-      showAlert("No payments found for this learner", "error");
-      setLoading(btn, false);
-      return;
-    }
-    
-    const totalPaid = payments.reduce((s, p) => s + Number(p.amount), 0);
+    const totalPaid = selectedPayments.reduce((s, p) => s + Number(p.amount), 0);
     const balance = totalFees - totalPaid;
     
-    renderReceipt(learnerToUse, term, payments, totalFees, totalPaid, balance, feeInfo);
+    renderReceipt(selectedLearner, term, selectedPayments, totalFees, totalPaid, balance, feeInfo);
     
-    // Auto-print after a short delay
     setTimeout(() => {
       window.print();
     }, 500);
@@ -336,14 +443,7 @@ btn.addEventListener("click", async () => {
   } catch (error) {
     showAlert("Error generating receipt: " + error.message, "error");
   } finally {
-    setLoading(btn, false);
-  }
-});
-
-// Allow Enter key to generate (only if autocomplete is not visible)
-searchInput.addEventListener("keypress", (e) => {
-  if (e.key === "Enter" && autocompleteDropdown.classList.contains('hidden')) {
-    btn.click();
+    setLoading(generateReceiptBtn, false, "Generate Receipt");
   }
 });
 
@@ -351,27 +451,23 @@ searchInput.addEventListener("keypress", (e) => {
    RENDER RECEIPT - A4 PAPER (2 RECEIPTS)
 =========================== */
 function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, feeInfo = null) {
-  const paymentRows = payments.map(p => {
+  const paymentItems = payments.map(p => {
     const date = new Date(p.payment_date).toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+      day: '2-digit',
+      month: '2-digit'
     });
-    const ref = p.reference_no || "-";
     const amount = Number(p.amount).toLocaleString('en-US', { 
       minimumFractionDigits: 2, 
       maximumFractionDigits: 2 
     });
     return `
-      <tr>
-        <td>${date}</td>
-        <td>${ref}</td>
-        <td class="text-right">KES ${amount}</td>
-      </tr>
+      <div class="payment-item">
+        <span class="date">${date}:</span>
+        <span class="amount">KES ${amount}</span>
+      </div>
     `;
   }).join("");
   
-  // Add custom fee info if applicable
   let feeNoteHtml = '';
   if (feeInfo) {
     const feeTypeLabel = {
@@ -388,7 +484,6 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
     `;
   }
   
-  // Create single receipt HTML
   const receiptHTML = `
     <div class="receipt-header">
       <h1>LITTLE ANGELS ACADEMY</h1>
@@ -401,7 +496,7 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
       
       <div class="info-section">
         <div class="info-row">
-          <div class="info-label">Admission Number:</div>
+          <div class="info-label">Admission No:</div>
           <div class="info-value">${learner.admission_no}</div>
         </div>
         <div class="info-row">
@@ -420,18 +515,12 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
       
       ${feeNoteHtml}
       
-      <table class="payment-table">
-        <thead>
-          <tr>
-            <th>Payment Date</th>
-            <th>Reference No.</th>
-            <th class="text-right">Amount</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${paymentRows}
-        </tbody>
-      </table>
+      <div class="payments-horizontal">
+        <h3>Payments Received:</h3>
+        <div class="payment-items">
+          ${paymentItems}
+        </div>
+      </div>
       
       <div class="summary-section">
         <div class="summary-row">
@@ -464,8 +553,8 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
     
     <div class="receipt-footer">
       <p><strong>Thank you for your payment</strong></p>
-      <p style="margin-top: 4px;">This is an official receipt from Little Angels Academy. Please retain for your records.</p>
-      <p style="margin-top: 4px;">Printed: ${new Date().toLocaleString('en-US', { 
+      <p>This is an official receipt from Little Angels Academy. Please retain for your records.</p>
+      <p>Printed: ${new Date().toLocaleString('en-US', { 
         year: 'numeric', 
         month: 'long', 
         day: 'numeric',
@@ -475,7 +564,6 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
     </div>
   `;
   
-  // Render 2 copies of the same receipt
   container.innerHTML = `
     <div class="receipt">${receiptHTML}</div>
     <div class="receipt">${receiptHTML}</div>
@@ -488,4 +576,4 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
    INIT
 =========================== */
 checkAuth();
-loadAllLearners(); // Load learners for autocomplete
+loadAllLearners();
