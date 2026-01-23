@@ -81,8 +81,10 @@ async function loadAllLearners() {
     if (error) throw error;
     
     allLearners = data || [];
+    console.log("Loaded learners:", allLearners.length); // Debug log
   } catch (error) {
     console.error("Error loading learners:", error);
+    showAlert("Error loading learners: " + error.message, "error");
   }
 }
 
@@ -554,5 +556,10 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
 /* ===========================
    INIT
 =========================== */
-checkAuth();
-loadAllLearners();
+async function initPage() {
+  await checkAuth();
+  await loadAllLearners();
+  console.log("Page initialized with", allLearners.length, "learners");
+}
+
+initPage();
