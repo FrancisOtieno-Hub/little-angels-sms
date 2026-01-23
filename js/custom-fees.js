@@ -134,8 +134,10 @@ async function loadAllLearners() {
     if (error) throw error;
     
     allLearners = data || [];
+    console.log("Loaded learners:", allLearners.length); // Debug log
   } catch (error) {
     console.error("Error loading learners:", error);
+    showAlert("Error loading learners: " + error.message, "error");
   }
 }
 
@@ -614,8 +616,13 @@ typeFilter.addEventListener('change', () => {
 /* ===========================
    INIT
 =========================== */
-checkAuth();
-loadActiveTerm();
-loadAllLearners();
-loadClasses();
-loadCustomFeesList();
+async function initPage() {
+  await checkAuth();
+  await loadActiveTerm();
+  await loadAllLearners();
+  await loadClasses();
+  await loadCustomFeesList();
+  console.log("Page initialized with", allLearners.length, "learners");
+}
+
+initPage();
