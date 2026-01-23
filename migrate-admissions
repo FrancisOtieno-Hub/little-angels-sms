@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admission Number Migration | Little Angels Academy</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="dashboard">
+    <div class="page-header">
+      <h1>Admission Number Migration Tool</h1>
+      <div class="header-actions">
+        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
+        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    
+    <div id="alertContainer"></div>
+    
+    <!-- MIGRATION INFO -->
+    <div class="card">
+      <h2>⚠️ Important Information</h2>
+      <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 20px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+        <h3 style="color: #92400e; margin-bottom: 12px;">What This Tool Does:</h3>
+        <ul style="color: #92400e; line-height: 1.8; margin-left: 20px;">
+          <li>Converts old format (LAA/2026/0001) to new format (0001)</li>
+          <li>Only affects learners with old format admission numbers</li>
+          <li>Preserves the numeric sequence</li>
+          <li>Does NOT change any other data</li>
+          <li>Creates a backup preview before applying changes</li>
+        </ul>
+      </div>
+      
+      <div style="background: #dbeafe; border: 2px solid #3b82f6; padding: 20px; border-radius: var(--radius-sm);">
+        <h3 style="color: #1e40af; margin-bottom: 12px;">⚡ Migration Process:</h3>
+        <ol style="color: #1e40af; line-height: 1.8; margin-left: 20px;">
+          <li>Click "Preview Migration" to see what will change</li>
+          <li>Review the preview table carefully</li>
+          <li>If everything looks correct, click "Apply Migration"</li>
+          <li>Wait for confirmation message</li>
+          <li>All done! ✓</li>
+        </ol>
+      </div>
+    </div>
+    
+    <!-- PREVIEW SECTION -->
+    <div class="card">
+      <h2>Step 1: Preview Changes</h2>
+      <p class="text-muted mb-20">See what will change before applying the migration</p>
+      <button id="previewBtn" class="btn btn-primary">🔍 Preview Migration</button>
+      
+      <div id="loadingPreview" class="text-center text-muted mt-20 hidden">
+        <div class="spinner" style="display: inline-block;"></div>
+        <span style="margin-left: 10px;">Loading preview...</span>
+      </div>
+      
+      <div id="previewSection" class="hidden mt-20">
+        <div id="previewStats" class="mb-20"></div>
+        <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+          <table id="previewTable">
+            <thead style="position: sticky; top: 0; background: var(--background); z-index: 10;">
+              <tr>
+                <th>Current Adm No</th>
+                <th>→</th>
+                <th>New Adm No</th>
+                <th>Learner Name</th>
+                <th>Class</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    
+    <!-- APPLY SECTION -->
+    <div class="card hidden" id="applySection">
+      <h2>Step 2: Apply Migration</h2>
+      <p class="text-muted mb-20">
+        ⚠️ This action will update the database. Make sure you've reviewed the preview above.
+      </p>
+      <div style="background: #fee2e2; border: 2px solid #ef4444; padding: 16px; border-radius: var(--radius-sm); margin-bottom: 20px;">
+        <p style="color: #991b1b; font-weight: 600; margin-bottom: 8px;">
+          ⚠️ WARNING: This action cannot be undone!
+        </p>
+        <p style="color: #991b1b; font-size: 0.9rem;">
+          Please ensure you have reviewed the preview and confirmed all changes are correct before proceeding.
+        </p>
+      </div>
+      <button id="applyBtn" class="btn btn-danger">Apply Migration Now</button>
+    </div>
+    
+    <!-- SUCCESS SECTION -->
+    <div class="card hidden" id="successSection">
+      <div style="background: #d1fae5; border: 2px solid #10b981; padding: 20px; border-radius: var(--radius-sm); text-align: center;">
+        <h2 style="color: #065f46; margin-bottom: 12px;">✓ Migration Completed Successfully!</h2>
+        <p style="color: #065f46; font-size: 1.1rem;">
+          All admission numbers have been updated to the new format.
+        </p>
+        <div style="margin-top: 20px;">
+          <a href="learners.html" class="btn btn-primary">View Learners</a>
+          <a href="dashboard.html" class="btn btn-secondary" style="margin-left: 12px;">Back to Dashboard</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script type="module" src="js/migrate-admissions.js"></script>
+</body>
+</html>
