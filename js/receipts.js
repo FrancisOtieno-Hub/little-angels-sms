@@ -467,14 +467,15 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
   
   const receiptHTML = `
     <div class="receipt-header">
-      <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 8px;">
-        <img src="assets/logo.png" alt="School Logo" style="height: 50px; width: auto;" onerror="this.style.display='none'">
-        <div style="text-align: center;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+        <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
+        <div style="text-align: center; flex: 1; margin: 0 10px;">
           <h1 style="margin: 0;">LITTLE ANGELS ACADEMY</h1>
           <p class="motto" style="margin: 2px 0;">Quality Education, Service and Discipline</p>
         </div>
+        <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
       </div>
-      <p class="contact">P.O. Box 7093, Thika | Tel: 0720 985 433</p>
+      <p class="contact" style="margin: 2px 0;">P.O. Box 7093, Thika | Tel: 0720 985 433</p>
     </div>
     
     <div class="receipt-body">
@@ -551,8 +552,8 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
   `;
   
   container.innerHTML = `
-    <div class="receipt">${receiptHTML}</div>
-    <div class="receipt">${receiptHTML}</div>
+    <div class="receipt ${feeInfo ? 'receipt-with-custom-fee' : ''}">${receiptHTML}</div>
+    <div class="receipt ${feeInfo ? 'receipt-with-custom-fee' : ''}">${receiptHTML}</div>
   `;
   
   container.classList.remove("hidden");
