@@ -467,8 +467,13 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
   
   const receiptHTML = `
     <div class="receipt-header">
-      <h1>LITTLE ANGELS ACADEMY</h1>
-      <p class="motto">Quality Education, Service and Discipline</p>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 8px;">
+        <img src="assets/logo.png" alt="School Logo" style="height: 50px; width: auto;" onerror="this.style.display='none'">
+        <div style="text-align: center;">
+          <h1 style="margin: 0;">LITTLE ANGELS ACADEMY</h1>
+          <p class="motto" style="margin: 2px 0;">Quality Education, Service and Discipline</p>
+        </div>
+      </div>
       <p class="contact">P.O. Box 7093, Thika | Tel: 0720 985 433</p>
     </div>
     
