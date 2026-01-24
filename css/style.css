@@ -655,10 +655,11 @@ table tbody tr:last-child td {
     page-break-after: always;
   }
   
+  /* Standard receipt height */
   .receipt {
     width: 210mm;
     height: 148.5mm;
-    padding: 15mm 12mm;
+    padding: 10mm 12mm;
     box-sizing: border-box;
     font-family: Arial, sans-serif;
     font-size: 10pt;
@@ -667,6 +668,13 @@ table tbody tr:last-child td {
     page-break-inside: avoid;
     position: relative;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Adjusted height for receipts with custom fees */
+  .receipt.receipt-with-custom-fee {
+    padding: 8mm 12mm;
   }
   
   .receipt:first-child {
@@ -677,24 +685,25 @@ table tbody tr:last-child td {
     color: black !important;
   }
   
+  /* HEADER - Reduced top margin */
   .receipt-header {
     text-align: center;
     border-bottom: 2px solid #000;
-    padding-bottom: 8px;
-    margin-bottom: 10px;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
   }
   
   .receipt-header h1 {
     font-size: 14pt;
     font-weight: bold;
-    margin: 0 0 3px 0;
+    margin: 0 0 2px 0;
     letter-spacing: 0.5px;
   }
   
   .receipt-header .motto {
     font-size: 8pt;
     font-style: italic;
-    margin: 2px 0;
+    margin: 1px 0;
   }
   
   .receipt-header .contact {
@@ -702,8 +711,12 @@ table tbody tr:last-child td {
     margin: 1px 0;
   }
   
+  /* BODY */
   .receipt-body {
-    margin: 10px 0;
+    margin: 8px 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
   }
   
   .receipt-title {
@@ -711,16 +724,16 @@ table tbody tr:last-child td {
     font-size: 11pt;
     font-weight: bold;
     text-decoration: underline;
-    margin: 8px 0;
+    margin: 6px 0;
   }
   
   .info-section {
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
   
   .info-row {
     display: flex;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     font-size: 9pt;
   }
   
@@ -735,19 +748,21 @@ table tbody tr:last-child td {
     padding-bottom: 1px;
   }
   
+  /* Custom fee note - more compact */
   .fee-note-box {
     background: #f9fafb;
     border: 1px solid #d1d5db;
-    padding: 6px 8px;
+    padding: 5px 7px;
     border-radius: 3px;
-    margin: 8px 0;
-    font-size: 8pt;
+    margin: 6px 0;
+    font-size: 7.5pt;
+    line-height: 1.2;
   }
   
-  /* Horizontal payment layout */
+  /* Horizontal payment layout - more compact */
   .payments-horizontal {
-    margin: 10px 0;
-    padding: 8px;
+    margin: 8px 0;
+    padding: 6px;
     background: #f9fafb;
     border: 1px solid #ddd;
     border-radius: 4px;
@@ -756,20 +771,20 @@ table tbody tr:last-child td {
   .payments-horizontal h3 {
     font-size: 9pt;
     font-weight: bold;
-    margin: 0 0 6px 0;
+    margin: 0 0 5px 0;
     text-align: center;
   }
   
   .payment-items {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
   }
   
   .payment-item {
     display: inline-block;
-    padding: 4px 8px;
+    padding: 3px 6px;
     background: white;
     border: 1px solid #ccc;
     border-radius: 3px;
@@ -788,38 +803,45 @@ table tbody tr:last-child td {
   }
   
   .summary-section {
-    margin-top: 10px;
-    padding-top: 8px;
+    margin-top: 8px;
+    padding-top: 6px;
     border-top: 2px solid #000;
   }
   
   .summary-row {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
     font-size: 9pt;
   }
   
   .summary-row.total {
     font-size: 10pt;
     font-weight: bold;
-    margin-top: 6px;
-    padding-top: 6px;
+    margin-top: 5px;
+    padding-top: 5px;
     border-top: 1px solid #000;
   }
   
+  /* FOOTER - Fixed positioning */
   .receipt-footer {
-    margin-top: 10px;
-    padding-top: 8px;
+    margin-top: auto;
+    padding-top: 6px;
     border-top: 1px solid #000;
     font-size: 7pt;
     text-align: center;
+    line-height: 1.3;
+  }
+  
+  .receipt-footer p {
+    margin: 1px 0;
   }
   
   .signature-section {
     display: flex;
     justify-content: space-between;
-    margin-top: 12px;
+    margin-top: 10px;
+    margin-bottom: 6px;
     font-size: 8pt;
   }
   
@@ -830,7 +852,7 @@ table tbody tr:last-child td {
   
   .signature-line {
     border-top: 1px solid #000;
-    margin-top: 25px;
+    margin-top: 20px;
     padding-top: 3px;
   }
   
