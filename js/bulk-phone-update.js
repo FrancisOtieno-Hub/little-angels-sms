@@ -185,17 +185,17 @@ async function downloadCurrentLearners() {
 
     // Add instructions sheet
     const instructions = [
-      ['INSTRUCTIONS FOR ADDING GUARDIAN PHONE NUMBERS'],
+      ['INSTRUCTIONS FOR ADDING PARENT/GUARDIAN PHONE NUMBERS'],
       [''],
       ['1. Fill the "guardian_phone" column with phone numbers'],
-      ['2. Use format: 0712345678 or 0722345678'],
+      ['2. Use format: 07xxxxxxxx or 01xxxxxxxx'],
       ['3. Do NOT change admission_no, first_name, last_name, or class columns'],
       ['4. Save this file when done'],
       ['5. Upload the saved file in Step 2'],
       [''],
       ['VALID PHONE FORMATS:'],
       ['✅ 0712345678'],
-      ['✅ 0722345678'],
+      ['✅ 0122345678'],
       ['✅ +254712345678'],
       [''],
       ['INVALID FORMATS:'],
