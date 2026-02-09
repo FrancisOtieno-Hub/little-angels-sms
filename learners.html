@@ -34,9 +34,17 @@
         <input 
           type="tel" 
           id="guardianPhone" 
-          placeholder="Parent/Guardian Phone (e.g., 07xxxxxxxx or 01xxxxxxxx)" 
+          placeholder="Parent/Guardian Phone 1 (e.g., 07xxxxxxxx or 01xxxxxxxx)" 
           pattern="[0-9+\-\s()]+"
-          title="Enter valid phone number: 07xxxxxxxx or 01xxxxxxxx"
+          title="Enter valid phone number: 0712345678"
+        />
+        
+        <input 
+          type="tel" 
+          id="guardianPhone2" 
+          placeholder="Parent/Guardian Phone 2 (Optional)" 
+          pattern="[0-9+\-\s()]+"
+          title="Enter second phone number (optional)"
         />
         <select id="classSelect" required>
           <option value="">Select Class</option>
@@ -92,7 +100,7 @@
               <th>Name</th>
               <th>Class</th>
               <th>Gender</th>
-              <th>Parent/Guardian Phone</th>
+              <th>Parent/Guardian Phones</th>
             </tr>
           </thead>
           <tbody></tbody>
