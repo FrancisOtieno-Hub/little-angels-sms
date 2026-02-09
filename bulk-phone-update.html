@@ -10,7 +10,7 @@
 <body>
   <div class="dashboard">
     <div class="page-header">
-      <h1>Bulk Guardian Phone Update</h1>
+      <h1>Bulk Parent/Guardian Phone Update</h1>
       <div class="header-actions">
         <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
         <button class="btn btn-danger" id="logoutBtn">Logout</button>
@@ -21,13 +21,13 @@
 
     <!-- Instructions Card -->
     <div class="card">
-      <h2>📋 Instructions</h2>
+      <h2>Instructions</h2>
       <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-        <h3 style="margin-top: 0;">How to Update Guardian Phone Numbers</h3>
+        <h3 style="margin-top: 0;">How to Update Parent/Guardian Phone Numbers</h3>
         <ol style="line-height: 1.8;">
-          <li><strong>Download Current Data:</strong> Click "Download Current Learners" to get Excel file with all 690 learners</li>
+          <li><strong>Download Current Data:</strong> Click "Download Current Learners" to get Excel file with all learners</li>
           <li><strong>Add Phone Numbers:</strong> Open the Excel file and fill the <code>guardian_phone</code> column</li>
-          <li><strong>Phone Format:</strong> Use format: <code>0712345678</code> or <code>0722345678</code> (Safaricom/Airtel)</li>
+          <li><strong>Phone Format:</strong> Use format: <code>07xxxxxxxx</code> or <code>01xxxxxxxx</code> (Safaricom/Airtel)</li>
           <li><strong>Save File:</strong> Save the Excel file (keep same format)</li>
           <li><strong>Upload & Preview:</strong> Upload the file below and preview changes</li>
           <li><strong>Update Database:</strong> Review and click "Update All Phone Numbers"</li>
@@ -35,7 +35,7 @@
         
         <div style="background: white; padding: 10px; border-radius: 4px; margin-top: 15px;">
           <strong>✅ Valid Phone Formats:</strong><br>
-          <code>0712345678</code>, <code>0722345678</code>, <code>0733345678</code>, <code>+254712345678</code><br><br>
+          <code>0712345678</code>, <code>0122345678</code>, <code>+254712345678</code><br><br>
           <strong>❌ Invalid Formats:</strong><br>
           <code>712345678</code> (missing 0), <code>07123</code> (too short), <code>071234567890</code> (too long)
         </div>
@@ -49,7 +49,7 @@
       
       <div style="display: flex; gap: 12px; align-items: center; margin-top: 15px;">
         <button id="downloadBtn" class="btn btn-primary">
-          📥 Download Current Learners (Excel)
+          Download Current Learners (Excel)
         </button>
         <span id="downloadStatus" class="text-muted"></span>
       </div>
@@ -64,12 +64,12 @@
     <!-- Step 2: Upload Updated File -->
     <div class="card">
       <h2>Step 2: Upload Updated Excel File</h2>
-      <p class="text-muted">Upload the Excel file with guardian phone numbers added</p>
+      <p class="text-muted">Upload the Excel file with parent/guardian phone numbers added</p>
       
       <input type="file" id="excelFile" accept=".xlsx,.xls" style="margin: 15px 0;" />
       
       <button id="previewBtn" class="btn btn-primary">
-        👁️ Preview Updates
+        Preview Updates
       </button>
 
       <!-- Validation Summary -->
@@ -141,8 +141,8 @@
       <p class="text-muted">Update phone number for a single learner manually</p>
       
       <div style="display: grid; gap: 12px; max-width: 500px; margin-top: 15px;">
-        <input type="text" id="manualAdmNo" placeholder="Admission Number (e.g., LAA001)" />
-        <input type="tel" id="manualPhone" placeholder="Guardian Phone (0712345678)" />
+        <input type="text" id="manualAdmNo" placeholder="Admission Number (e.g., 001)" />
+        <input type="tel" id="manualPhone" placeholder="Parent/Guardian Phone (0712345678)" />
         <button id="updateSingleBtn" class="btn btn-primary">Update Single Learner</button>
       </div>
 
