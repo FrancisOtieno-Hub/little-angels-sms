@@ -47,7 +47,7 @@
     
     <div class="card">
       <h2>Bulk Learner Upload (Excel)</h2>
-      <p class="text-muted mb-20">Upload an Excel file with columns: first_name, last_name, gender, date_of_birth</p>
+      <p class="text-muted mb-20">Upload an Excel file with columns: first_name, last_name, gender, date_of_birth, guardian_phone</p>
       <select id="bulkClassSelect" required>
         <option value="">Select Class for Upload</option>
       </select>
@@ -78,7 +78,7 @@
             <option value="">All Classes</option>
           </select>
           <button id="exportExcelBtn" class="btn btn-primary" style="width: auto;">
-            📊 Export to Excel
+            Export to Excel
           </button>
         </div>
       </div>
@@ -92,6 +92,7 @@
               <th>Name</th>
               <th>Class</th>
               <th>Gender</th>
+              <th>Parent/Guardian Phone</th>
             </tr>
           </thead>
           <tbody></tbody>
