@@ -23,7 +23,7 @@
     <div class="card">
       <h2>Instructions</h2>
       <div style="background: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
-        <h3 style="margin-top: 0;">How to Update Parent/Guardian Phone Numbers</h3>
+        <h3 style="margin-top: 0;">How to Update Guardian Phone Numbers</h3>
         <ol style="line-height: 1.8;">
           <li><strong>Download Current Data:</strong> Click "Download Current Learners" to get Excel file with all learners</li>
           <li><strong>Add Phone Numbers:</strong> Open the Excel file and fill the <code>guardian_phone</code> column</li>
@@ -175,13 +175,14 @@
         <!-- Selected Learner Display -->
         <div id="selectedLearner" class="hidden" style="padding: 12px; background: #f0f9ff; border-radius: 6px; border-left: 4px solid #3b82f6;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <div>
+            <div style="flex: 1;">
               <strong id="selectedLearnerName"></strong>
               <div style="font-size: 0.9rem; color: #666; margin-top: 4px;">
                 <span id="selectedLearnerAdm"></span> • <span id="selectedLearnerClass"></span>
               </div>
-              <div style="font-size: 0.9rem; margin-top: 4px;">
-                Current Phone: <span id="selectedLearnerPhone" style="color: #3b82f6;"></span>
+              <div style="font-size: 0.9rem; margin-top: 6px;">
+                <div>Current Phone 1: <span id="selectedLearnerPhone" style="color: #3b82f6; font-weight: 500;"></span></div>
+                <div style="margin-top: 2px;">Current Phone 2: <span id="selectedLearnerPhone2" style="color: #3b82f6; font-weight: 500;"></span></div>
               </div>
             </div>
             <button 
@@ -195,12 +196,19 @@
         <input 
           type="tel" 
           id="manualPhone" 
-          placeholder="Parent/Guardian Phone (07xxxxxxxx or 01xxxxxxxx)" 
+          placeholder="Parent/Guardian Phone 1 (07xxxxxxxx or 01xxxxxxxx)" 
+          disabled
+        />
+        
+        <input 
+          type="tel" 
+          id="manualPhone2" 
+          placeholder="Guardian Phone 2 (Optional)" 
           disabled
         />
         
         <button id="updateSingleBtn" class="btn btn-primary" disabled>
-          Update Phone Number
+          Update Phone Numbers
         </button>
       </div>
 
