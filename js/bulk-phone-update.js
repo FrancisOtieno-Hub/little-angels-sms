@@ -22,10 +22,20 @@ const totalRows = document.getElementById("totalRows");
 const progressLog = document.getElementById("progressLog");
 
 // Manual entry
-const manualAdmNo = document.getElementById("manualAdmNo");
+const learnerSearch = document.getElementById("learnerSearch");
+const searchResults = document.getElementById("searchResults");
+const selectedLearner = document.getElementById("selectedLearner");
+const selectedLearnerName = document.getElementById("selectedLearnerName");
+const selectedLearnerAdm = document.getElementById("selectedLearnerAdm");
+const selectedLearnerClass = document.getElementById("selectedLearnerClass");
+const selectedLearnerPhone = document.getElementById("selectedLearnerPhone");
+const clearSelection = document.getElementById("clearSelection");
 const manualPhone = document.getElementById("manualPhone");
 const updateSingleBtn = document.getElementById("updateSingleBtn");
 const manualResult = document.getElementById("manualResult");
+
+let allLearners = [];
+let selectedLearnerId = null;
 
 let currentLearnersData = [];
 let previewData = [];
@@ -122,6 +132,153 @@ function validatePhoneNumber(phone) {
   
   return { valid: true, normalized };
 }
+
+/* ===========================
+   LOAD ALL LEARNERS FOR AUTOCOMPLETE
+=========================== */
+async function loadAllLearners() {
+  try {
+    const { data, error } = await supabase
+      .from("learners")
+      .select(`
+        id,
+        admission_no,
+        first_name,
+        last_name,
+        guardian_phone,
+        class_id,
+        classes(name)
+      `)
+      .eq("active", true)
+      .order("admission_no");
+
+    if (error) throw error;
+
+    allLearners = data || [];
+    logProgress(`Loaded ${allLearners.length} learners for search`, "info");
+  } catch (error) {
+    console.error("Error loading learners:", error);
+    logProgress(`Error loading learners: ${error.message}`, "error");
+  }
+}
+
+/* ===========================
+   LEARNER SEARCH AUTOCOMPLETE
+=========================== */
+learnerSearch.addEventListener('input', function(e) {
+  const searchTerm = e.target.value.trim().toLowerCase();
+  
+  if (searchTerm.length < 2) {
+    searchResults.classList.add('hidden');
+    searchResults.innerHTML = '';
+    return;
+  }
+
+  // Filter learners
+  const matches = allLearners.filter(learner => {
+    const fullName = `${learner.first_name} ${learner.last_name}`.toLowerCase();
+    const admNo = learner.admission_no.toLowerCase();
+    
+    return fullName.includes(searchTerm) || admNo.includes(searchTerm);
+  }).slice(0, 10); // Limit to 10 results
+
+  if (matches.length === 0) {
+    searchResults.innerHTML = '<div style="padding: 12px; color: #9ca3af;">No learners found</div>';
+    searchResults.classList.remove('hidden');
+    return;
+  }
+
+  // Display results
+  searchResults.innerHTML = matches.map(learner => {
+    const phoneDisplay = learner.guardian_phone 
+      ? `<span style="color: #10b981;">✓ ${learner.guardian_phone}</span>` 
+      : '<span style="color: #9ca3af;">No phone</span>';
+    
+    return `
+      <div 
+        class="search-result-item" 
+        data-learner-id="${learner.id}"
+        style="
+          padding: 12px;
+          border-bottom: 1px solid #e5e7eb;
+          cursor: pointer;
+          transition: background 0.2s;
+        "
+        onmouseover="this.style.background='#f9fafb'"
+        onmouseout="this.style.background='white'"
+      >
+        <div style="font-weight: 600; color: #1f2937;">
+          ${learner.first_name} ${learner.last_name}
+        </div>
+        <div style="font-size: 0.85rem; color: #6b7280; margin-top: 2px;">
+          ${learner.admission_no} • ${learner.classes?.name || 'N/A'}
+        </div>
+        <div style="font-size: 0.85rem; margin-top: 4px;">
+          ${phoneDisplay}
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  searchResults.classList.remove('hidden');
+
+  // Add click handlers
+  document.querySelectorAll('.search-result-item').forEach(item => {
+    item.addEventListener('click', function() {
+      const learnerId = this.dataset.learnerId;
+      selectLearner(learnerId);
+    });
+  });
+});
+
+// Close search results when clicking outside
+document.addEventListener('click', function(e) {
+  if (!learnerSearch.contains(e.target) && !searchResults.contains(e.target)) {
+    searchResults.classList.add('hidden');
+  }
+});
+
+/* ===========================
+   SELECT LEARNER FROM SEARCH
+=========================== */
+function selectLearner(learnerId) {
+  const learner = allLearners.find(l => l.id === learnerId);
+  
+  if (!learner) return;
+
+  selectedLearnerId = learner.id;
+  
+  // Display selected learner
+  selectedLearnerName.textContent = `${learner.first_name} ${learner.last_name}`;
+  selectedLearnerAdm.textContent = learner.admission_no;
+  selectedLearnerClass.textContent = learner.classes?.name || 'N/A';
+  selectedLearnerPhone.textContent = learner.guardian_phone || 'None';
+  
+  selectedLearner.classList.remove('hidden');
+  searchResults.classList.add('hidden');
+  learnerSearch.value = '';
+  
+  // Enable phone input
+  manualPhone.disabled = false;
+  manualPhone.focus();
+  updateSingleBtn.disabled = false;
+  
+  logProgress(`Selected: ${learner.first_name} ${learner.last_name} (${learner.admission_no})`, "info");
+}
+
+/* ===========================
+   CLEAR SELECTION
+=========================== */
+clearSelection.addEventListener('click', function() {
+  selectedLearnerId = null;
+  selectedLearner.classList.add('hidden');
+  manualPhone.value = '';
+  manualPhone.disabled = true;
+  updateSingleBtn.disabled = true;
+  learnerSearch.value = '';
+  learnerSearch.focus();
+  manualResult.classList.add('hidden');
+});
 
 /* ===========================
    AUTH CHECK
@@ -537,11 +694,15 @@ function downloadInvalidRecords() {
    MANUAL SINGLE UPDATE
 =========================== */
 async function updateSingleLearner() {
-  const admNo = manualAdmNo.value.trim();
+  if (!selectedLearnerId) {
+    showAlert("Please select a learner first", "error");
+    return;
+  }
+
   const phone = manualPhone.value.trim();
 
-  if (!admNo || !phone) {
-    showAlert("Please enter both admission number and phone number", "error");
+  if (!phone) {
+    showAlert("Please enter a phone number", "error");
     return;
   }
 
@@ -554,42 +715,37 @@ async function updateSingleLearner() {
   }
 
   setLoading(updateSingleBtn, true);
-  logProgress(`🔍 Looking up ${admNo}...`);
+  
+  const learner = allLearners.find(l => l.id === selectedLearnerId);
+  logProgress(`🔄 Updating ${learner.first_name} ${learner.last_name}...`);
 
   try {
-    // Check if learner exists
-    const { data: learner, error: fetchError } = await supabase
-      .from("learners")
-      .select("admission_no, first_name, last_name, guardian_phone")
-      .eq("admission_no", admNo)
-      .single();
-
-    if (fetchError || !learner) {
-      throw new Error("Learner not found with admission number: " + admNo);
-    }
-
-    // Update phone
     const { error: updateError } = await supabase
       .from("learners")
       .update({ guardian_phone: validation.normalized })
-      .eq("admission_no", admNo);
+      .eq("id", selectedLearnerId);
 
     if (updateError) throw updateError;
 
-    logProgress(`✅ Updated ${admNo} (${learner.first_name} ${learner.last_name})`, "success");
+    logProgress(`✅ Updated ${learner.admission_no} (${learner.first_name} ${learner.last_name})`, "success");
     
     manualResult.innerHTML = `
       <div style="background: #f0fdf4; padding: 12px; border-radius: 6px; border-left: 4px solid #10b981;">
         <strong>✅ Successfully Updated</strong><br>
-        <strong>${learner.first_name} ${learner.last_name}</strong> (${admNo})<br>
+        <strong>${learner.first_name} ${learner.last_name}</strong> (${learner.admission_no})<br>
         Old Phone: ${learner.guardian_phone || 'None'}<br>
         New Phone: <strong>${validation.normalized}</strong>
       </div>
     `;
     manualResult.classList.remove('hidden');
 
-    // Clear inputs
-    manualAdmNo.value = '';
+    // Update the learner in the array
+    learner.guardian_phone = validation.normalized;
+    
+    // Update display
+    selectedLearnerPhone.textContent = validation.normalized;
+
+    // Clear phone input
     manualPhone.value = '';
 
     showAlert(`✅ Updated phone number for ${learner.first_name} ${learner.last_name}`, "success");
@@ -630,4 +786,5 @@ logoutBtn.addEventListener("click", async () => {
    INIT
 =========================== */
 checkAuth();
+loadAllLearners(); // Load learners for autocomplete search
 logProgress("Ready to update guardian phone numbers", "info");
