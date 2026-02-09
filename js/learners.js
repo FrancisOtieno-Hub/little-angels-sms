@@ -131,45 +131,48 @@ function validatePhoneNumber(phone) {
    PHONE INPUT FORMATTER
 =========================== */
 function setupPhoneInputFormatter() {
-  const guardianPhoneInput = document.getElementById("guardianPhone");
+  const phoneInputs = [
+    document.getElementById("guardianPhone"),
+    document.getElementById("guardianPhone2")
+  ].filter(input => input !== null);
   
-  if (!guardianPhoneInput) return;
-  
-  guardianPhoneInput.addEventListener('input', function(e) {
-    // Remove non-digits except + at start
-    let value = e.target.value;
-    if (value.startsWith('+')) {
-      value = '+' + value.substring(1).replace(/\D/g, '');
-    } else {
-      value = value.replace(/\D/g, '');
-    }
+  phoneInputs.forEach(guardianPhoneInput => {
+    guardianPhoneInput.addEventListener('input', function(e) {
+      // Remove non-digits except + at start
+      let value = e.target.value;
+      if (value.startsWith('+')) {
+        value = '+' + value.substring(1).replace(/\D/g, '');
+      } else {
+        value = value.replace(/\D/g, '');
+      }
+      
+      // Limit length
+      if (value.startsWith('+254')) {
+        value = value.substring(0, 13); // +254XXXXXXXXX
+      } else if (value.startsWith('254')) {
+        value = value.substring(0, 12); // 254XXXXXXXXX
+      } else if (value.startsWith('0')) {
+        value = value.substring(0, 10); // 0XXXXXXXXX
+      }
+      
+      e.target.value = value;
+    });
     
-    // Limit length
-    if (value.startsWith('+254')) {
-      value = value.substring(0, 13); // +254XXXXXXXXX
-    } else if (value.startsWith('254')) {
-      value = value.substring(0, 12); // 254XXXXXXXXX
-    } else if (value.startsWith('0')) {
-      value = value.substring(0, 10); // 0XXXXXXXXX
-    }
-    
-    e.target.value = value;
-  });
-  
-  guardianPhoneInput.addEventListener('blur', function(e) {
-    const value = e.target.value.trim();
-    if (!value) {
-      e.target.style.borderColor = '';
-      return;
-    }
-    
-    const validation = validatePhoneNumber(value);
-    if (validation.valid) {
-      e.target.style.borderColor = '#10b981';
-      e.target.value = validation.normalized;
-    } else {
-      e.target.style.borderColor = '#ef4444';
-    }
+    guardianPhoneInput.addEventListener('blur', function(e) {
+      const value = e.target.value.trim();
+      if (!value) {
+        e.target.style.borderColor = '';
+        return;
+      }
+      
+      const validation = validatePhoneNumber(value);
+      if (validation.valid) {
+        e.target.style.borderColor = '#10b981';
+        e.target.value = validation.normalized;
+      } else {
+        e.target.style.borderColor = '#ef4444';
+      }
+    });
   });
 }
 
@@ -266,12 +269,23 @@ form.addEventListener("submit", async (e) => {
 
   try {
     const guardianPhone = document.getElementById("guardianPhone")?.value.trim() || "";
+    const guardianPhone2 = document.getElementById("guardianPhone2")?.value.trim() || "";
     
-    // Validate phone number if provided
+    // Validate first phone number if provided
     if (guardianPhone) {
       const phoneValidation = validatePhoneNumber(guardianPhone);
       if (!phoneValidation.valid) {
-        showAlert(`Invalid phone number: ${phoneValidation.error}. Use format: 0712345678 or 0201234567`, "error");
+        showAlert(`Invalid phone number 1: ${phoneValidation.error}. Use format: 0712345678 or 0201234567`, "error");
+        setLoading(saveBtn, false, "Save Learner");
+        return;
+      }
+    }
+    
+    // Validate second phone number if provided
+    if (guardianPhone2) {
+      const phoneValidation2 = validatePhoneNumber(guardianPhone2);
+      if (!phoneValidation2.valid) {
+        showAlert(`Invalid phone number 2: ${phoneValidation2.error}. Use format: 0712345678 or 0201234567`, "error");
         setLoading(saveBtn, false, "Save Learner");
         return;
       }
@@ -284,7 +298,8 @@ form.addEventListener("submit", async (e) => {
       gender: document.getElementById("gender").value,
       date_of_birth: document.getElementById("dob").value,
       class_id: classSelect.value,
-      guardian_phone: guardianPhone || null
+      guardian_phone: guardianPhone || null,
+      guardian_phone_2: guardianPhone2 || null
     };
 
     const { error } = await supabase
@@ -323,6 +338,7 @@ async function loadLearners(filterClassId = null) {
         date_of_birth,
         class_id,
         guardian_phone,
+        guardian_phone_2,
         classes(id, name, level)
       `)
       .eq("active", true)
@@ -349,9 +365,23 @@ async function loadLearners(filterClassId = null) {
 
     data.forEach(l => {
       const row = document.createElement("tr");
-      const phoneDisplay = l.guardian_phone 
-        ? `<span style="color: #10b981;">✓ ${l.guardian_phone}</span>` 
-        : '<span style="color: #9ca3af;">-</span>';
+      
+      // Format phone numbers display
+      let phoneDisplay = '';
+      if (l.guardian_phone && l.guardian_phone_2) {
+        phoneDisplay = `
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <span style="color: #10b981;">✓ ${l.guardian_phone}</span>
+            <span style="color: #10b981;">✓ ${l.guardian_phone_2}</span>
+          </div>
+        `;
+      } else if (l.guardian_phone) {
+        phoneDisplay = `<span style="color: #10b981;">✓ ${l.guardian_phone}</span>`;
+      } else if (l.guardian_phone_2) {
+        phoneDisplay = `<span style="color: #10b981;">✓ ${l.guardian_phone_2}</span>`;
+      } else {
+        phoneDisplay = '<span style="color: #9ca3af;">-</span>';
+      }
       
       row.innerHTML = `
         <td>${l.admission_no}</td>
@@ -379,7 +409,8 @@ function updateLearnerStats(learners) {
   const total = learners.length;
   const male = learners.filter(l => l.gender === 'Male').length;
   const female = learners.filter(l => l.gender === 'Female').length;
-  const withPhone = learners.filter(l => l.guardian_phone).length;
+  const withPhone = learners.filter(l => l.guardian_phone || l.guardian_phone_2).length;
+  const withBothPhones = learners.filter(l => l.guardian_phone && l.guardian_phone_2).length;
   
   learnerStats.innerHTML = `
     <div style="padding: 12px 16px; background: var(--background); border-radius: var(--radius-sm); border-left: 3px solid var(--primary);">
@@ -397,6 +428,10 @@ function updateLearnerStats(learners) {
     <div style="padding: 12px 16px; background: var(--background); border-radius: var(--radius-sm); border-left: 3px solid #10b981;">
       <div style="font-size: 0.85rem; color: var(--text-secondary);">With Phone</div>
       <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;">${withPhone}</div>
+    </div>
+    <div style="padding: 12px 16px; background: var(--background); border-radius: var(--radius-sm); border-left: 3px solid #f59e0b;">
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">Both Phones</div>
+      <div style="font-size: 1.5rem; font-weight: 700; color: #f59e0b;">${withBothPhones}</div>
     </div>
   `;
 }
@@ -456,7 +491,8 @@ exportExcelBtn.addEventListener('click', async () => {
         'Last Name': learner.last_name,
         'Gender': learner.gender || '',
         'Date of Birth': learner.date_of_birth || '',
-        'Guardian Phone': learner.guardian_phone || ''
+        'Guardian Phone 1': learner.guardian_phone || '',
+        'Guardian Phone 2': learner.guardian_phone_2 || ''
       });
     });
     
@@ -482,7 +518,8 @@ exportExcelBtn.addEventListener('click', async () => {
         { wch: 15 }, // Last Name
         { wch: 10 }, // Gender
         { wch: 15 }, // Date of Birth
-        { wch: 15 }  // Guardian Phone
+        { wch: 15 }, // Guardian Phone 1
+        { wch: 15 }  // Guardian Phone 2
       ];
       
       // Add sheet to workbook (limit sheet name to 31 chars)
@@ -568,12 +605,21 @@ previewBtn.addEventListener("click", async () => {
             dateOfBirth = excelDateToJSDate(row.date_of_birth);
           }
           
-          // Validate and normalize guardian phone
+          // Validate and normalize guardian phones
           let guardianPhone = null;
-          if (row.guardian_phone) {
-            const phoneValidation = validatePhoneNumber(row.guardian_phone);
+          let guardianPhone2 = null;
+          
+          if (row.guardian_phone || row.guardian_phone_1) {
+            const phoneValidation = validatePhoneNumber(row.guardian_phone || row.guardian_phone_1);
             if (phoneValidation.valid) {
               guardianPhone = phoneValidation.normalized;
+            }
+          }
+          
+          if (row.guardian_phone_2) {
+            const phoneValidation2 = validatePhoneNumber(row.guardian_phone_2);
+            if (phoneValidation2.valid) {
+              guardianPhone2 = phoneValidation2.normalized;
             }
           }
 
@@ -584,14 +630,21 @@ previewBtn.addEventListener("click", async () => {
             gender: row.gender || "",
             date_of_birth: dateOfBirth,
             class_id: bulkClassSelect.value,
-            guardian_phone: guardianPhone
+            guardian_phone: guardianPhone,
+            guardian_phone_2: guardianPhone2
           };
 
           bulkLearners.push(learner);
 
-          const phoneStatus = guardianPhone 
-            ? '<span style="color: #10b981;">✓</span>' 
+          const phoneStatus = guardianPhone && guardianPhone2
+            ? '<span style="color: #10b981;">✓✓</span>' 
+            : guardianPhone || guardianPhone2
+            ? '<span style="color: #10b981;">✓</span>'
             : '<span style="color: #9ca3af;">-</span>';
+          
+          const phoneDisplay = [guardianPhone, guardianPhone2]
+            .filter(p => p)
+            .join(', ') || 'N/A';
 
           const tr = document.createElement("tr");
           tr.innerHTML = `
@@ -599,7 +652,7 @@ previewBtn.addEventListener("click", async () => {
             <td>${row.first_name} ${row.last_name}</td>
             <td>${row.gender || 'N/A'}</td>
             <td>${dateOfBirth || 'N/A'}</td>
-            <td>${guardianPhone || 'N/A'} ${phoneStatus}</td>
+            <td>${phoneDisplay} ${phoneStatus}</td>
           `;
           previewBody.appendChild(tr);
         });
