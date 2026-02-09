@@ -81,6 +81,99 @@ function excelDateToJSDate(serial) {
 }
 
 /* ===========================
+   PHONE NUMBER VALIDATION
+=========================== */
+function validatePhoneNumber(phone) {
+  if (!phone) {
+    return { valid: true, normalized: null }; // Empty is OK
+  }
+  
+  // Clean the phone number
+  const cleaned = String(phone).replace(/[\s\-()]/g, '');
+  
+  // Kenyan phone validation
+  // Valid formats: 
+  // Mobile: 0712345678, +254712345678, 254712345678
+  // Landline: 0101234567, 0201234567, 0411234567, etc.
+  const patterns = [
+    /^0[17]\d{8}$/,           // Mobile: 0712345678, 0722345678, etc.
+    /^0[2-6]\d{8}$/,          // Landline: 0201234567, 0411234567, etc.
+    /^\+2540?[17]\d{8}$/,     // Mobile international: +254712345678
+    /^2540?[17]\d{8}$/,       // Mobile international: 254712345678
+    /^\+2540?[2-6]\d{8}$/,    // Landline international: +254201234567
+    /^2540?[2-6]\d{8}$/       // Landline international: 254201234567
+  ];
+  
+  const isValid = patterns.some(pattern => pattern.test(cleaned));
+  
+  if (!isValid) {
+    if (cleaned.length < 10) {
+      return { valid: false, error: "Too short (need 10 digits)" };
+    } else if (cleaned.length > 13) {
+      return { valid: false, error: "Too long" };
+    } else {
+      return { valid: false, error: "Invalid format" };
+    }
+  }
+  
+  // Normalize to standard format (0XXXXXXXXX)
+  let normalized = cleaned;
+  if (cleaned.startsWith('+254')) {
+    normalized = '0' + cleaned.substring(4);
+  } else if (cleaned.startsWith('254')) {
+    normalized = '0' + cleaned.substring(3);
+  }
+  
+  return { valid: true, normalized };
+}
+
+/* ===========================
+   PHONE INPUT FORMATTER
+=========================== */
+function setupPhoneInputFormatter() {
+  const guardianPhoneInput = document.getElementById("guardianPhone");
+  
+  if (!guardianPhoneInput) return;
+  
+  guardianPhoneInput.addEventListener('input', function(e) {
+    // Remove non-digits except + at start
+    let value = e.target.value;
+    if (value.startsWith('+')) {
+      value = '+' + value.substring(1).replace(/\D/g, '');
+    } else {
+      value = value.replace(/\D/g, '');
+    }
+    
+    // Limit length
+    if (value.startsWith('+254')) {
+      value = value.substring(0, 13); // +254XXXXXXXXX
+    } else if (value.startsWith('254')) {
+      value = value.substring(0, 12); // 254XXXXXXXXX
+    } else if (value.startsWith('0')) {
+      value = value.substring(0, 10); // 0XXXXXXXXX
+    }
+    
+    e.target.value = value;
+  });
+  
+  guardianPhoneInput.addEventListener('blur', function(e) {
+    const value = e.target.value.trim();
+    if (!value) {
+      e.target.style.borderColor = '';
+      return;
+    }
+    
+    const validation = validatePhoneNumber(value);
+    if (validation.valid) {
+      e.target.style.borderColor = '#10b981';
+      e.target.value = validation.normalized;
+    } else {
+      e.target.style.borderColor = '#ef4444';
+    }
+  });
+}
+
+/* ===========================
    AUTH CHECK
 =========================== */
 async function checkAuth() {
@@ -172,13 +265,26 @@ form.addEventListener("submit", async (e) => {
   setLoading(saveBtn, true);
 
   try {
+    const guardianPhone = document.getElementById("guardianPhone")?.value.trim() || "";
+    
+    // Validate phone number if provided
+    if (guardianPhone) {
+      const phoneValidation = validatePhoneNumber(guardianPhone);
+      if (!phoneValidation.valid) {
+        showAlert(`Invalid phone number: ${phoneValidation.error}. Use format: 0712345678 or 0201234567`, "error");
+        setLoading(saveBtn, false, "Save Learner");
+        return;
+      }
+    }
+
     const learner = {
       admission_no: admissionNoInput.value,
       first_name: document.getElementById("firstName").value.trim(),
       last_name: document.getElementById("lastName").value.trim(),
       gender: document.getElementById("gender").value,
       date_of_birth: document.getElementById("dob").value,
-      class_id: classSelect.value
+      class_id: classSelect.value,
+      guardian_phone: guardianPhone || null
     };
 
     const { error } = await supabase
@@ -216,6 +322,7 @@ async function loadLearners(filterClassId = null) {
         gender,
         date_of_birth,
         class_id,
+        guardian_phone,
         classes(id, name, level)
       `)
       .eq("active", true)
@@ -242,11 +349,16 @@ async function loadLearners(filterClassId = null) {
 
     data.forEach(l => {
       const row = document.createElement("tr");
+      const phoneDisplay = l.guardian_phone 
+        ? `<span style="color: #10b981;">✓ ${l.guardian_phone}</span>` 
+        : '<span style="color: #9ca3af;">-</span>';
+      
       row.innerHTML = `
         <td>${l.admission_no}</td>
         <td>${l.first_name} ${l.last_name}</td>
         <td>${l.classes?.name || 'N/A'}</td>
         <td>${l.gender || 'N/A'}</td>
+        <td>${phoneDisplay}</td>
       `;
       tableBody.appendChild(row);
     });
@@ -267,6 +379,7 @@ function updateLearnerStats(learners) {
   const total = learners.length;
   const male = learners.filter(l => l.gender === 'Male').length;
   const female = learners.filter(l => l.gender === 'Female').length;
+  const withPhone = learners.filter(l => l.guardian_phone).length;
   
   learnerStats.innerHTML = `
     <div style="padding: 12px 16px; background: var(--background); border-radius: var(--radius-sm); border-left: 3px solid var(--primary);">
@@ -280,6 +393,10 @@ function updateLearnerStats(learners) {
     <div style="padding: 12px 16px; background: var(--background); border-radius: var(--radius-sm); border-left: 3px solid #ec4899;">
       <div style="font-size: 0.85rem; color: var(--text-secondary);">Female</div>
       <div style="font-size: 1.5rem; font-weight: 700; color: #ec4899;">${female}</div>
+    </div>
+    <div style="padding: 12px 16px; background: var(--background); border-radius: var(--radius-sm); border-left: 3px solid #10b981;">
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">With Phone</div>
+      <div style="font-size: 1.5rem; font-weight: 700; color: #10b981;">${withPhone}</div>
     </div>
   `;
 }
@@ -308,6 +425,7 @@ exportExcelBtn.addEventListener('click', async () => {
         last_name,
         gender,
         date_of_birth,
+        guardian_phone,
         classes(id, name, level)
       `)
       .eq("active", true)
@@ -337,7 +455,8 @@ exportExcelBtn.addEventListener('click', async () => {
         'First Name': learner.first_name,
         'Last Name': learner.last_name,
         'Gender': learner.gender || '',
-        'Date of Birth': learner.date_of_birth || ''
+        'Date of Birth': learner.date_of_birth || '',
+        'Guardian Phone': learner.guardian_phone || ''
       });
     });
     
@@ -362,7 +481,8 @@ exportExcelBtn.addEventListener('click', async () => {
         { wch: 15 }, // First Name
         { wch: 15 }, // Last Name
         { wch: 10 }, // Gender
-        { wch: 15 }  // Date of Birth
+        { wch: 15 }, // Date of Birth
+        { wch: 15 }  // Guardian Phone
       ];
       
       // Add sheet to workbook (limit sheet name to 31 chars)
@@ -447,6 +567,15 @@ previewBtn.addEventListener("click", async () => {
           if (row.date_of_birth) {
             dateOfBirth = excelDateToJSDate(row.date_of_birth);
           }
+          
+          // Validate and normalize guardian phone
+          let guardianPhone = null;
+          if (row.guardian_phone) {
+            const phoneValidation = validatePhoneNumber(row.guardian_phone);
+            if (phoneValidation.valid) {
+              guardianPhone = phoneValidation.normalized;
+            }
+          }
 
           const learner = {
             admission_no: admissionNo,
@@ -454,10 +583,15 @@ previewBtn.addEventListener("click", async () => {
             last_name: row.last_name || "",
             gender: row.gender || "",
             date_of_birth: dateOfBirth,
-            class_id: bulkClassSelect.value
+            class_id: bulkClassSelect.value,
+            guardian_phone: guardianPhone
           };
 
           bulkLearners.push(learner);
+
+          const phoneStatus = guardianPhone 
+            ? '<span style="color: #10b981;">✓</span>' 
+            : '<span style="color: #9ca3af;">-</span>';
 
           const tr = document.createElement("tr");
           tr.innerHTML = `
@@ -465,13 +599,16 @@ previewBtn.addEventListener("click", async () => {
             <td>${row.first_name} ${row.last_name}</td>
             <td>${row.gender || 'N/A'}</td>
             <td>${dateOfBirth || 'N/A'}</td>
+            <td>${guardianPhone || 'N/A'} ${phoneStatus}</td>
           `;
           previewBody.appendChild(tr);
         });
 
         previewTable.classList.remove("hidden");
         saveBulkBtn.classList.remove("hidden");
-        showAlert(`${bulkLearners.length} learners ready to be saved`, "info");
+        
+        const validPhones = bulkLearners.filter(l => l.guardian_phone).length;
+        showAlert(`${bulkLearners.length} learners ready (${validPhones} with phone numbers)`, "info");
       } catch (error) {
         showAlert("Error reading Excel file: " + error.message, "error");
       } finally {
@@ -525,3 +662,4 @@ checkAuth();
 loadClasses();
 generateAdmissionNo();
 loadLearners();
+setupPhoneInputFormatter();
