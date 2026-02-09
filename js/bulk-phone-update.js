@@ -29,8 +29,10 @@ const selectedLearnerName = document.getElementById("selectedLearnerName");
 const selectedLearnerAdm = document.getElementById("selectedLearnerAdm");
 const selectedLearnerClass = document.getElementById("selectedLearnerClass");
 const selectedLearnerPhone = document.getElementById("selectedLearnerPhone");
+const selectedLearnerPhone2 = document.getElementById("selectedLearnerPhone2");
 const clearSelection = document.getElementById("clearSelection");
 const manualPhone = document.getElementById("manualPhone");
+const manualPhone2 = document.getElementById("manualPhone2");
 const updateSingleBtn = document.getElementById("updateSingleBtn");
 const manualResult = document.getElementById("manualResult");
 
@@ -146,6 +148,7 @@ async function loadAllLearners() {
         first_name,
         last_name,
         guardian_phone,
+        guardian_phone_2,
         class_id,
         classes(name)
       `)
@@ -190,9 +193,21 @@ learnerSearch.addEventListener('input', function(e) {
 
   // Display results
   searchResults.innerHTML = matches.map(learner => {
-    const phoneDisplay = learner.guardian_phone 
-      ? `<span style="color: #10b981;">✓ ${learner.guardian_phone}</span>` 
-      : '<span style="color: #9ca3af;">No phone</span>';
+    let phoneDisplay = '';
+    if (learner.guardian_phone && learner.guardian_phone_2) {
+      phoneDisplay = `
+        <div style="display: flex; flex-direction: column; gap: 2px;">
+          <span style="color: #10b981;">✓ ${learner.guardian_phone}</span>
+          <span style="color: #10b981;">✓ ${learner.guardian_phone_2}</span>
+        </div>
+      `;
+    } else if (learner.guardian_phone) {
+      phoneDisplay = `<span style="color: #10b981;">✓ ${learner.guardian_phone}</span>`;
+    } else if (learner.guardian_phone_2) {
+      phoneDisplay = `<span style="color: #10b981;">✓ ${learner.guardian_phone_2}</span>`;
+    } else {
+      phoneDisplay = '<span style="color: #9ca3af;">No phone</span>';
+    }
     
     return `
       <div 
@@ -253,13 +268,15 @@ function selectLearner(learnerId) {
   selectedLearnerAdm.textContent = learner.admission_no;
   selectedLearnerClass.textContent = learner.classes?.name || 'N/A';
   selectedLearnerPhone.textContent = learner.guardian_phone || 'None';
+  selectedLearnerPhone2.textContent = learner.guardian_phone_2 || 'None';
   
   selectedLearner.classList.remove('hidden');
   searchResults.classList.add('hidden');
   learnerSearch.value = '';
   
-  // Enable phone input
+  // Enable phone inputs
   manualPhone.disabled = false;
+  manualPhone2.disabled = false;
   manualPhone.focus();
   updateSingleBtn.disabled = false;
   
@@ -273,7 +290,9 @@ clearSelection.addEventListener('click', function() {
   selectedLearnerId = null;
   selectedLearner.classList.add('hidden');
   manualPhone.value = '';
+  manualPhone2.value = '';
   manualPhone.disabled = true;
+  manualPhone2.disabled = true;
   updateSingleBtn.disabled = true;
   learnerSearch.value = '';
   learnerSearch.focus();
@@ -700,18 +719,33 @@ async function updateSingleLearner() {
   }
 
   const phone = manualPhone.value.trim();
+  const phone2 = manualPhone2.value.trim();
 
-  if (!phone) {
-    showAlert("Please enter a phone number", "error");
+  if (!phone && !phone2) {
+    showAlert("Please enter at least one phone number", "error");
     return;
   }
 
-  // Validate phone
-  const validation = validatePhoneNumber(phone);
+  // Validate phone 1
+  let validatedPhone = null;
+  if (phone) {
+    const validation = validatePhoneNumber(phone);
+    if (!validation.valid) {
+      showAlert(`Invalid phone number 1: ${validation.error}`, "error");
+      return;
+    }
+    validatedPhone = validation.normalized;
+  }
   
-  if (!validation.valid) {
-    showAlert(`Invalid phone number: ${validation.error}`, "error");
-    return;
+  // Validate phone 2
+  let validatedPhone2 = null;
+  if (phone2) {
+    const validation2 = validatePhoneNumber(phone2);
+    if (!validation2.valid) {
+      showAlert(`Invalid phone number 2: ${validation2.error}`, "error");
+      return;
+    }
+    validatedPhone2 = validation2.normalized;
   }
 
   setLoading(updateSingleBtn, true);
@@ -722,33 +756,50 @@ async function updateSingleLearner() {
   try {
     const { error: updateError } = await supabase
       .from("learners")
-      .update({ guardian_phone: validation.normalized })
+      .update({ 
+        guardian_phone: validatedPhone,
+        guardian_phone_2: validatedPhone2
+      })
       .eq("id", selectedLearnerId);
 
     if (updateError) throw updateError;
 
     logProgress(`✅ Updated ${learner.admission_no} (${learner.first_name} ${learner.last_name})`, "success");
     
+    const oldPhone1 = learner.guardian_phone || 'None';
+    const oldPhone2 = learner.guardian_phone_2 || 'None';
+    const newPhone1 = validatedPhone || 'None';
+    const newPhone2 = validatedPhone2 || 'None';
+    
     manualResult.innerHTML = `
       <div style="background: #f0fdf4; padding: 12px; border-radius: 6px; border-left: 4px solid #10b981;">
         <strong>✅ Successfully Updated</strong><br>
-        <strong>${learner.first_name} ${learner.last_name}</strong> (${learner.admission_no})<br>
-        Old Phone: ${learner.guardian_phone || 'None'}<br>
-        New Phone: <strong>${validation.normalized}</strong>
+        <strong>${learner.first_name} ${learner.last_name}</strong> (${learner.admission_no})<br><br>
+        <div style="display: grid; gap: 6px; margin-top: 8px;">
+          <div>
+            Phone 1: <span style="color: #ef4444;">${oldPhone1}</span> → <strong style="color: #10b981;">${newPhone1}</strong>
+          </div>
+          <div>
+            Phone 2: <span style="color: #ef4444;">${oldPhone2}</span> → <strong style="color: #10b981;">${newPhone2}</strong>
+          </div>
+        </div>
       </div>
     `;
     manualResult.classList.remove('hidden');
 
     // Update the learner in the array
-    learner.guardian_phone = validation.normalized;
+    learner.guardian_phone = validatedPhone;
+    learner.guardian_phone_2 = validatedPhone2;
     
     // Update display
-    selectedLearnerPhone.textContent = validation.normalized;
+    selectedLearnerPhone.textContent = validatedPhone || 'None';
+    selectedLearnerPhone2.textContent = validatedPhone2 || 'None';
 
-    // Clear phone input
+    // Clear phone inputs
     manualPhone.value = '';
+    manualPhone2.value = '';
 
-    showAlert(`✅ Updated phone number for ${learner.first_name} ${learner.last_name}`, "success");
+    showAlert(`✅ Updated phone numbers for ${learner.first_name} ${learner.last_name}`, "success");
 
   } catch (error) {
     logProgress(`❌ Error: ${error.message}`, "error");
