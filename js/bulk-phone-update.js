@@ -838,4 +838,4 @@ logoutBtn.addEventListener("click", async () => {
 =========================== */
 checkAuth();
 loadAllLearners(); // Load learners for autocomplete search
-logProgress("Ready to update guardian phone numbers", "info");
+logProgress("Ready to update parent/guardian phone numbers", "info");
