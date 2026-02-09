@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SMS Management | Little Angels Academy</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="dashboard">
+    <div class="page-header">
+      <h1>SMS Management</h1>
+      <div class="header-actions">
+        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
+        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+      </div>
+    </div>
+    
+    <div id="alertContainer"></div>
+    
+    <!-- SMS Balance Card -->
+    <div class="card">
+      <h2>SMS Balance</h2>
+      <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+        <div>
+          <p class="text-muted">Current Balance</p>
+          <h3 id="smsBalance">--</h3>
+        </div>
+        <button id="refreshBalanceBtn" class="btn btn-secondary">Refresh Balance</button>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+      <h2>Quick Actions</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+        <button id="feeReminderBtn" class="btn btn-primary">Send Fee Reminders</button>
+        <button id="generalMessageBtn" class="btn btn-primary">Send General Message</button>
+        <button id="customMessageBtn" class="btn btn-primary">Send Custom Message</button>
+      </div>
+    </div>
+
+    <!-- Fee Reminder Section -->
+    <div class="card hidden" id="feeReminderSection">
+      <h2>Fee Reminder</h2>
+      <p class="text-muted">Send fee balance reminders to parents/guardians</p>
+      
+      <div style="display: grid; gap: 12px; margin-top: 20px;">
+        <select id="feeTermSelect">
+          <option value="">Select Term</option>
+        </select>
+        
+        <select id="feeClassFilter">
+          <option value="">All Classes</option>
+        </select>
+        
+        <select id="feeBalanceFilter">
+          <option value="all">All Learners</option>
+          <option value="with_balance">Only With Balance</option>
+          <option value="overpaid">Only Overpaid</option>
+        </select>
+
+        <textarea id="feeReminderTemplate" rows="6" placeholder="Message template (use {{name}}, {{admission_no}}, {{balance}}, {{class}})">Dear parent/guardian of {{name}} ({{admission_no}}), 
+
+Your child has a fee balance of KES {{balance}} for {{term}}. 
+
+Please clear the balance at your earliest convenience.
+
+Thank you.
+- Little Angels Academy</textarea>
+
+        <div style="display: flex; gap: 12px;">
+          <button id="previewFeeRecipientsBtn" class="btn btn-primary">Preview Recipients</button>
+          <button id="sendFeeRemindersBtn" class="btn btn-success hidden">Send to All</button>
+        </div>
+
+        <div id="feePreviewContainer" class="hidden">
+          <h3>Recipients Preview (<span id="feeRecipientCount">0</span>)</h3>
+          <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+            <table id="feeRecipientsTable" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Adm No</th>
+                  <th>Name</th>
+                  <th>Class</th>
+                  <th>Phone</th>
+                  <th>Balance</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- General Message Section -->
+    <div class="card hidden" id="generalMessageSection">
+      <h2>General Message</h2>
+      <p class="text-muted">Send a general message to all or selected parents/guardians</p>
+      
+      <div style="display: grid; gap: 12px; margin-top: 20px;">
+        <select id="generalClassFilter">
+          <option value="">All Classes</option>
+        </select>
+
+        <textarea id="generalMessageText" rows="6" placeholder="Type your message here...">Dear parent/guardian,
+
+
+
+Thank you.
+- Little Angels Academy</textarea>
+
+        <div style="display: flex; gap: 12px;">
+          <button id="previewGeneralRecipientsBtn" class="btn btn-primary">Preview Recipients</button>
+          <button id="sendGeneralMessageBtn" class="btn btn-success hidden">Send to All</button>
+        </div>
+
+        <div id="generalPreviewContainer" class="hidden">
+          <h3>Recipients Preview (<span id="generalRecipientCount">0</span>)</h3>
+          <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+            <table id="generalRecipientsTable" style="width: 100%;">
+              <thead>
+                <tr>
+                  <th>Adm No</th>
+                  <th>Name</th>
+                  <th>Class</th>
+                  <th>Phone</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Message Section -->
+    <div class="card hidden" id="customMessageSection">
+      <h2>Custom Message</h2>
+      <p class="text-muted">Send a message to specific phone numbers</p>
+      
+      <div style="display: grid; gap: 12px; margin-top: 20px;">
+        <textarea id="customPhoneNumbers" rows="4" placeholder="Enter phone numbers (one per line or comma-separated)&#10;Example:&#10;0712345678&#10;0723456789"></textarea>
+
+        <textarea id="customMessageText" rows="6" placeholder="Type your message here..."></textarea>
+
+        <div style="display: flex; gap: 12px;">
+          <button id="sendCustomMessageBtn" class="btn btn-success">Send Message</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SMS History -->
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h2 style="margin: 0;">SMS History</h2>
+        <div style="display: flex; gap: 12px;">
+          <select id="historyFilter" style="padding: 8px;">
+            <option value="all">All Messages</option>
+            <option value="fee_reminder">Fee Reminders</option>
+            <option value="general">General Messages</option>
+            <option value="custom">Custom Messages</option>
+          </select>
+          <button id="refreshHistoryBtn" class="btn btn-secondary">Refresh</button>
+        </div>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table id="smsHistoryTable">
+          <thead>
+            <tr>
+              <th>Date/Time</th>
+              <th>Type</th>
+              <th>Recipients</th>
+              <th>Message Preview</th>
+              <th>Status</th>
+              <th>Sent By</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <script type="module" src="js/sms.js"></script>
+</body>
+</html>
