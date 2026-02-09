@@ -138,12 +138,70 @@
     <!-- Step 3: Manual Entry (Optional) -->
     <div class="card">
       <h2>Step 3: Manual Entry (Optional)</h2>
-      <p class="text-muted">Update phone number for a single learner manually</p>
+      <p class="text-muted">Search and update phone number for a single learner</p>
       
-      <div style="display: grid; gap: 12px; max-width: 500px; margin-top: 15px;">
-        <input type="text" id="manualAdmNo" placeholder="Admission Number (e.g., 0001)" />
-        <input type="tel" id="manualPhone" placeholder="Parent/Guardian Phone (07xxxxxxxx or 01xxxxxxxx)" />
-        <button id="updateSingleBtn" class="btn btn-primary">Update Single Learner</button>
+      <div style="display: grid; gap: 12px; max-width: 600px; margin-top: 15px;">
+        <!-- Search Input with Autocomplete -->
+        <div style="position: relative;">
+          <input 
+            type="text" 
+            id="learnerSearch" 
+            placeholder="Search by name or admission number..." 
+            autocomplete="off"
+            style="width: 100%;"
+          />
+          
+          <!-- Autocomplete Dropdown -->
+          <div 
+            id="searchResults" 
+            class="hidden"
+            style="
+              position: absolute;
+              top: 100%;
+              left: 0;
+              right: 0;
+              background: white;
+              border: 1px solid #ddd;
+              border-top: none;
+              border-radius: 0 0 4px 4px;
+              max-height: 300px;
+              overflow-y: auto;
+              box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+              z-index: 1000;
+            "
+          ></div>
+        </div>
+
+        <!-- Selected Learner Display -->
+        <div id="selectedLearner" class="hidden" style="padding: 12px; background: #f0f9ff; border-radius: 6px; border-left: 4px solid #3b82f6;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <strong id="selectedLearnerName"></strong>
+              <div style="font-size: 0.9rem; color: #666; margin-top: 4px;">
+                <span id="selectedLearnerAdm"></span> • <span id="selectedLearnerClass"></span>
+              </div>
+              <div style="font-size: 0.9rem; margin-top: 4px;">
+                Current Phone: <span id="selectedLearnerPhone" style="color: #3b82f6;"></span>
+              </div>
+            </div>
+            <button 
+              id="clearSelection" 
+              class="btn btn-secondary btn-sm"
+              style="padding: 6px 12px; font-size: 0.85rem;"
+            >Clear</button>
+          </div>
+        </div>
+
+        <input 
+          type="tel" 
+          id="manualPhone" 
+          placeholder="Parent/Guardian Phone (07xxxxxxxx or 01xxxxxxxx)" 
+          disabled
+        />
+        
+        <button id="updateSingleBtn" class="btn btn-primary" disabled>
+          Update Phone Number
+        </button>
       </div>
 
       <div id="manualResult" class="hidden" style="margin-top: 15px;"></div>
