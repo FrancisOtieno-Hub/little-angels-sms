@@ -274,15 +274,25 @@ async function sendBulkSMS(recipients, messageTemplate) {
 =========================== */
 
 async function loadBalance() {
+  // Check if API credentials are configured
+  if (HOSTPINNACLE_CONFIG.apiKey === 'YOUR_API_KEY_HERE' || 
+      HOSTPINNACLE_CONFIG.partnerId === 'YOUR_PARTNER_ID_HERE') {
+    smsBalanceEl.textContent = 'Configure API';
+    smsBalanceEl.style.color = '#f59e0b';
+    return;
+  }
+  
   setLoading(refreshBalanceBtn, true);
   
   const result = await getSMSBalance();
   
   if (result.success) {
     smsBalanceEl.textContent = `${result.balance} SMS`;
+    smsBalanceEl.style.color = '';
   } else {
-    smsBalanceEl.textContent = 'Error loading balance';
-    showAlert('Failed to load SMS balance: ' + result.error, 'error');
+    smsBalanceEl.textContent = 'Error loading';
+    smsBalanceEl.style.color = '#ef4444';
+    console.error('Balance error:', result.error);
   }
   
   setLoading(refreshBalanceBtn, false);
@@ -336,10 +346,7 @@ async function loadSMSHistory(filterType = 'all') {
   try {
     let query = supabase
       .from("sms_history")
-      .select(`
-        *,
-        sent_by_user:users(email)
-      `)
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (filterType !== 'all') {
@@ -367,7 +374,7 @@ async function loadSMSHistory(filterType = 'all') {
         <td>${record.total_recipients} (${record.successful_count} sent)</td>
         <td>${messagePreview}</td>
         <td><span class="badge badge-${statusClass}">${record.status}</span></td>
-        <td>${record.sent_by_user?.email || 'N/A'}</td>
+        <td>Admin</td>
       `;
       smsHistoryTable.appendChild(tr);
     });
@@ -376,7 +383,11 @@ async function loadSMSHistory(filterType = 'all') {
       smsHistoryTable.innerHTML = '<tr><td colspan="6" style="text-align: center;">No SMS history found</td></tr>';
     }
   } catch (error) {
-    showAlert("Error loading SMS history: " + error.message, "error");
+    console.error("SMS History Error:", error);
+    // Don't show error if no history exists yet
+    if (!error.message.includes('relation') && !error.message.includes('does not exist')) {
+      showAlert("Error loading SMS history: " + error.message, "error");
+    }
   }
 }
 
