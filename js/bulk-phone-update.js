@@ -325,6 +325,7 @@ async function downloadCurrentLearners() {
         first_name,
         last_name,
         guardian_phone,
+        guardian_phone_2,
         class_id,
         class:classes(name)
       `)
@@ -341,7 +342,8 @@ async function downloadCurrentLearners() {
       first_name: learner.first_name,
       last_name: learner.last_name,
       class: learner.class?.name || 'N/A',
-      guardian_phone: learner.guardian_phone || ''
+      guardian_phone_1: learner.guardian_phone || '',
+      guardian_phone_2: learner.guardian_phone_2 || ''
     }));
 
     // Create workbook
@@ -353,7 +355,8 @@ async function downloadCurrentLearners() {
       { wch: 20 },  // first_name
       { wch: 20 },  // last_name
       { wch: 15 },  // class
-      { wch: 20 }   // guardian_phone
+      { wch: 20 },  // guardian_phone_1
+      { wch: 20 }   // guardian_phone_2
     ];
 
     const wb = XLSX.utils.book_new();
@@ -363,11 +366,13 @@ async function downloadCurrentLearners() {
     const instructions = [
       ['INSTRUCTIONS FOR ADDING PARENT/GUARDIAN PHONE NUMBERS'],
       [''],
-      ['1. Fill the "guardian_phone" column with phone numbers'],
+      ['1. Fill the "guardian_phone_1" and/or "guardian_phone_2" columns with phone numbers'],
       ['2. Use format: 07xxxxxxxx or 01xxxxxxxx'],
-      ['3. Do NOT change admission_no, first_name, last_name, or class columns'],
-      ['4. Save this file when done'],
-      ['5. Upload the saved file in Step 2'],
+      ['3. guardian_phone_1 is for the primary parent/guardian'],
+      ['4. guardian_phone_2 is optional (for second parent/guardian)'],
+      ['5. Do NOT change admission_no, first_name, last_name, or class columns'],
+      ['6. Save this file when done'],
+      ['7. Upload the saved file in Step 2'],
       [''],
       ['VALID PHONE FORMATS:'],
       ['✅ 0712345678'],
@@ -378,6 +383,12 @@ async function downloadCurrentLearners() {
       ['❌ 712345678 (missing leading 0)'],
       ['❌ 07123 (too short)'],
       ['❌ 071234567890 (too long)'],
+      [''],
+      ['EXAMPLES:'],
+      ['admission_no | first_name | last_name | class    | guardian_phone_1 | guardian_phone_2'],
+      ['0001         | John       | Doe       | Grade 1  | 0712345678      | 0722345678      '],
+      ['0002         | Jane       | Smith     | Grade 2  | 0201234567      |                 '],
+      ['0003         | Bob        | Johnson   | Grade 3  | 0733456789      | 0201234567      '],
     ];
 
     const wsInstructions = XLSX.utils.aoa_to_sheet(instructions);
@@ -436,6 +447,7 @@ async function previewUploadedFile() {
             first_name,
             last_name,
             guardian_phone,
+            guardian_phone_2,
             class_id,
             class:classes(name)
           `);
@@ -456,7 +468,8 @@ async function previewUploadedFile() {
 
         uploadedData.forEach((row, index) => {
           const admNo = String(row.admission_no || '').trim();
-          const newPhone = String(row.guardian_phone || '').trim();
+          const newPhone1 = String(row.guardian_phone_1 || row.guardian_phone || '').trim();
+          const newPhone2 = String(row.guardian_phone_2 || '').trim();
           
           if (!admNo) {
             logProgress(`⚠️ Row ${index + 2}: Missing admission number`, "warning");
@@ -473,7 +486,9 @@ async function previewUploadedFile() {
               last_name: row.last_name || '?',
               class: row.class || '?',
               current_phone: 'N/A',
-              new_phone: newPhone,
+              current_phone_2: 'N/A',
+              new_phone: newPhone1,
+              new_phone_2: newPhone2,
               validation: 'Not found in database'
             };
             previewData.push(record);
@@ -481,26 +496,31 @@ async function previewUploadedFile() {
             return;
           }
 
-          // Validate phone number
-          const validation = validatePhoneNumber(newPhone);
+          // Validate phone numbers
+          const validation1 = validatePhoneNumber(newPhone1);
+          const validation2 = validatePhoneNumber(newPhone2);
+          
+          const hasValidPhone = validation1.valid || validation2.valid;
           
           const record = {
-            status: validation.valid ? 'valid' : 'invalid',
+            status: hasValidPhone ? 'valid' : 'invalid',
             admission_no: admNo,
             first_name: dbLearner.first_name,
             last_name: dbLearner.last_name,
             class: dbLearner.class?.name || 'N/A',
             current_phone: dbLearner.guardian_phone || 'None',
-            new_phone: validation.valid ? validation.normalized : newPhone,
-            validation: validation.valid ? '✅ Valid' : `❌ ${validation.error}`,
+            current_phone_2: dbLearner.guardian_phone_2 || 'None',
+            new_phone: validation1.valid ? validation1.normalized : newPhone1,
+            new_phone_2: validation2.valid ? validation2.normalized : newPhone2,
+            validation: hasValidPhone ? '✅ Valid' : `❌ ${validation1.error || validation2.error}`,
             db_id: dbLearner.id
           };
 
           previewData.push(record);
           
-          if (validation.valid) {
+          if (hasValidPhone) {
             validRecords.push(record);
-          } else if (newPhone) {
+          } else if (newPhone1 || newPhone2) {
             invalidRecords.push(record);
           }
         });
@@ -571,11 +591,35 @@ function renderPreviewTable(data) {
       statusColor = '#ef4444';
     }
 
-    const currentPhoneDisplay = record.current_phone === 'None' ? 
-      '<span style="color: #9ca3af;">None</span>' : record.current_phone;
+    // Format current phones display
+    let currentPhoneDisplay = '';
+    if (record.current_phone !== 'None' && record.current_phone_2 !== 'None') {
+      currentPhoneDisplay = `${record.current_phone}<br>${record.current_phone_2}`;
+    } else if (record.current_phone !== 'None') {
+      currentPhoneDisplay = record.current_phone;
+    } else if (record.current_phone_2 !== 'None') {
+      currentPhoneDisplay = record.current_phone_2;
+    } else {
+      currentPhoneDisplay = '<span style="color: #9ca3af;">None</span>';
+    }
     
-    const newPhoneDisplay = record.status === 'valid' ? 
-      `<strong style="color: #10b981;">${record.new_phone}</strong>` : record.new_phone;
+    // Format new phones display
+    let newPhoneDisplay = '';
+    if (record.new_phone && record.new_phone_2) {
+      const phone1 = record.status === 'valid' ? 
+        `<strong style="color: #10b981;">${record.new_phone}</strong>` : record.new_phone;
+      const phone2 = record.status === 'valid' ? 
+        `<strong style="color: #10b981;">${record.new_phone_2}</strong>` : record.new_phone_2;
+      newPhoneDisplay = `${phone1}<br>${phone2}`;
+    } else if (record.new_phone) {
+      newPhoneDisplay = record.status === 'valid' ? 
+        `<strong style="color: #10b981;">${record.new_phone}</strong>` : record.new_phone;
+    } else if (record.new_phone_2) {
+      newPhoneDisplay = record.status === 'valid' ? 
+        `<strong style="color: #10b981;">${record.new_phone_2}</strong>` : record.new_phone_2;
+    } else {
+      newPhoneDisplay = '<span style="color: #9ca3af;">-</span>';
+    }
 
     tr.innerHTML = `
       <td style="text-align: center; font-size: 18px;">${statusIcon}</td>
@@ -635,7 +679,10 @@ async function updateAllPhoneNumbers() {
       try {
         const { error } = await supabase
           .from("learners")
-          .update({ guardian_phone: record.new_phone })
+          .update({ 
+            guardian_phone: record.new_phone || null,
+            guardian_phone_2: record.new_phone_2 || null
+          })
           .eq("admission_no", record.admission_no);
 
         if (error) throw error;
@@ -838,4 +885,4 @@ logoutBtn.addEventListener("click", async () => {
 =========================== */
 checkAuth();
 loadAllLearners(); // Load learners for autocomplete search
-logProgress("Ready to update parent/guardian phone numbers", "info");
+logProgress("Ready to update guardian phone numbers", "info");
