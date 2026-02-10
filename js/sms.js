@@ -293,7 +293,8 @@ async function loadTerms() {
     const { data, error } = await supabase
       .from("terms")
       .select("*")
-      .order("created_at", { ascending: false });
+      .order("year", { ascending: false })
+      .order("term", { ascending: false });
 
     if (error) throw error;
 
@@ -302,7 +303,8 @@ async function loadTerms() {
     data.forEach(term => {
       const option = document.createElement("option");
       option.value = term.id;
-      option.textContent = term.name;
+      // Build term name like "Term 1 2026"
+      option.textContent = `Term ${term.term} ${term.year}`;
       feeTermSelect.appendChild(option);
     });
   } catch (error) {
@@ -404,16 +406,11 @@ async function previewFeeRecipients() {
       .eq("id", termId)
       .single();
 
-    // Build query
+    // Get learners with fee balances for this term
     let query = supabase
-      .from("learners")
-      .select(`
-        *,
-        class:classes(name),
-        fee_summary:fee_summary(total_paid, total_expected)
-      `)
-      .eq("active", true)
-      .not("guardian_phone", "is", null);
+      .from("learner_fee_balances")
+      .select("*")
+      .eq("term_id", termId);
 
     if (classId) {
       query = query.eq("class_id", classId);
@@ -425,10 +422,7 @@ async function previewFeeRecipients() {
 
     // Filter and process learners
     learners.forEach(learner => {
-      const feeSummary = learner.fee_summary.find(fs => fs.term_id === termId);
-      const totalPaid = feeSummary?.total_paid || 0;
-      const totalExpected = feeSummary?.total_expected || 0;
-      const balance = totalExpected - totalPaid;
+      const balance = learner.balance || 0;
 
       // Apply balance filter
       if (balanceFilter === 'with_balance' && balance <= 0) return;
@@ -436,20 +430,20 @@ async function previewFeeRecipients() {
 
       if (learner.guardian_phone) {
         feeRecipients.push({
-          learner_id: learner.id,
+          learner_id: learner.learner_id,
           admission_no: learner.admission_no,
           name: `${learner.first_name} ${learner.last_name}`,
-          class_name: learner.class.name,
+          class_name: learner.class_name,
           phone: learner.guardian_phone,
           balance: balance,
-          term: termData.name
+          term: `Term ${termData.term} ${termData.year}`
         });
 
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td>${learner.admission_no}</td>
           <td>${learner.first_name} ${learner.last_name}</td>
-          <td>${learner.class.name}</td>
+          <td>${learner.class_name}</td>
           <td>${learner.guardian_phone}</td>
           <td>${formatCurrency(balance)}</td>
         `;
