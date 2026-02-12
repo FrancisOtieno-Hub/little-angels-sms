@@ -4,6 +4,142 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Learner Registration | Little Angels Academy</title>
+  <style>
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal.hidden {
+  display: none !important;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Action Buttons in Table */
+.btn-icon {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s;
+  background: transparent;
+}
+
+.btn-icon:hover {
+  transform: scale(1.1);
+}
+
+.btn-edit {
+  background: #eff6ff;
+}
+
+.btn-edit:hover {
+  background: #dbeafe;
+}
+
+.btn-delete {
+  background: #fef2f2;
+}
+
+.btn-delete:hover {
+  background: #fee2e2;
+}
+
+/* Form Labels */
+label {
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+/* Read-only inputs */
+input[readonly] {
+  background: #f3f4f6 !important;
+  cursor: not-allowed !important;
+}
+
+/* Responsive Modal */
+@media (max-width: 640px) {
+  .modal-content {
+    padding: 20px;
+    max-width: 100%;
+  }
+}
+
+/* Search input focus effect */
+#searchInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Clear button hover effect */
+#clearSearchBtn:hover {
+  color: #ef4444;
+}
+
+/* Highlight search results (optional) */
+tr.search-highlight {
+  background-color: #fef3c7;
+  animation: highlight-fade 2s ease-in-out;
+}
+
+@keyframes highlight-fade {
+  0% { background-color: #fef3c7; }
+  100% { background-color: transparent; }
+}
+
+/* Hidden rows when searching */
+tr[style*="display: none"] {
+  display: none !important;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .search-filter-row {
+    flex-direction: column;
+  }
+  
+  #searchInput {
+    width: 100%;
+  }
+  
+  #classFilter {
+    width: 100%;
+    min-width: unset;
+  }
+}
+</style>
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
@@ -72,6 +208,7 @@
             <th>Gender</th>
             <th>DOB</th>
             <th>Parent/Guardian Phone</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -82,8 +219,48 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
         <h2 style="margin: 0;">Registered Learners</h2>
         <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+
+          <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+          <!-- Search Input -->
+          <div style="flex: 1; position: relative;">
+            <input 
+              type="text" 
+              id="searchInput" 
+              placeholder="🔍 Search by name, admission no, class, phone..." 
+              style="
+                width: 100%; 
+                padding: 10px 40px 10px 12px;
+                border: 1px solid #d1d5db;
+                border-radius: 6px;
+                font-size: 14px;
+              "
+            />
+            <!-- Clear button (optional) -->
+            <button 
+              id="clearSearchBtn"
+              onclick="document.getElementById('searchInput').value = ''; document.getElementById('searchInput').dispatchEvent(new Event('input'));"
+              style="
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: transparent;
+                border: none;
+                color: #9ca3af;
+                cursor: pointer;
+                font-size: 18px;
+                padding: 4px 8px;
+                display: none;
+              "
+              title="Clear search"
+            >
+              ✕
+            </button>
+          </div>
+          
           <select id="classFilter" style="width: auto; margin: 0;">
             <option value="">All Classes</option>
+            <!-- Classes populated by JavaScript -->
           </select>
           <button id="exportExcelBtn" class="btn btn-primary" style="width: auto;">
             Export to Excel
@@ -103,11 +280,114 @@
               <th>Parent/Guardian Phones</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+          <!-- Populated by JavaScript -->
+          </tbody>
         </table>
       </div>
     </div>
   </div>
+
+  
+<!-- Edit Learner Modal -->
+<div id="editModal" class="modal hidden">
+  <div class="modal-content" style="max-width: 600px;">
+    <h2 style="margin-bottom: 20px;">✏️ Edit Learner Details</h2>
+    
+    <form id="editForm">
+      <div style="display: grid; gap: 12px;">
+        <!-- Admission Number (Read-only) -->
+        <div>
+          <label style="display: block; margin-bottom: 4px; font-weight: 500;">Admission Number</label>
+          <input 
+            type="text" 
+            id="editAdmissionNo" 
+            readonly
+            style="background: #f3f4f6; cursor: not-allowed;"
+          />
+        </div>
+
+        <!-- First Name -->
+        <div>
+          <label style="display: block; margin-bottom: 4px; font-weight: 500;">First Name *</label>
+          <input 
+            type="text" 
+            id="editFirstName" 
+            required
+            placeholder="First Name"
+          />
+        </div>
+
+        <!-- Last Name -->
+        <div>
+          <label style="display: block; margin-bottom: 4px; font-weight: 500;">Last Name *</label>
+          <input 
+            type="text" 
+            id="editLastName" 
+            required
+            placeholder="Last Name"
+          />
+        </div>
+
+        <!-- Gender -->
+        <div>
+          <label style="display: block; margin-bottom: 4px; font-weight: 500;">Gender</label>
+          <select id="editGender">
+            <option value="">Select Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+
+        <!-- Date of Birth -->
+        <div>
+          <label style="display: block; margin-bottom: 4px; font-weight: 500;">Date of Birth</label>
+          <input type="date" id="editDob" />
+        </div>
+
+        <!-- Class -->
+        <div>
+          <label style="display: block; margin-bottom: 4px; font-weight: 500;">Class *</label>
+          <select id="editClassSelect" required>
+            <option value="">Select Class</option>
+          </select>
+        </div>
+
+        <!-- Guardian Phone 1 -->
+        <div>
+          <label style="display: block; margin-bottom: 4px; font-weight: 500;">Parent/Guardian Phone 1</label>
+          <input 
+            type="tel" 
+            id="editGuardianPhone" 
+            placeholder="0712345678 or 0201234567"
+            pattern="[0-9+\-\s()]+"
+          />
+        </div>
+
+        <!-- Guardian Phone 2 -->
+        <div>
+          <label style="display: block; margin-bottom: 4px; font-weight: 500;">Parent/Guardian Phone 2 (Optional)</label>
+          <input 
+            type="tel" 
+            id="editGuardianPhone2" 
+            placeholder="Second parent/guardian number"
+            pattern="[0-9+\-\s()]+"
+          />
+        </div>
+      </div>
+
+      <!-- Modal Buttons -->
+      <div style="display: flex; gap: 12px; margin-top: 24px;">
+        <button type="button" id="cancelEditBtn" class="btn btn-secondary" style="flex: 1;">
+          Cancel
+        </button>
+        <button type="submit" id="saveEditBtn" class="btn btn-primary" style="flex: 1;">
+          Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
   
   <script type="module" src="js/learners.js"></script>
 </body>
