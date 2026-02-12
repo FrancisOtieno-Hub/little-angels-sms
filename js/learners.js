@@ -10,6 +10,7 @@ const loadingLearners = document.getElementById("loadingLearners");
 const alertContainer = document.getElementById("alertContainer");
 const saveBtn = document.getElementById("saveBtn");
 const classFilter = document.getElementById("classFilter");
+const searchInput = document.getElementById("searchInput");
 const exportExcelBtn = document.getElementById("exportExcelBtn");
 const learnerStats = document.getElementById("learnerStats");
 
@@ -21,9 +22,16 @@ const previewTable = document.getElementById("previewTable");
 const previewBody = previewTable.querySelector("tbody");
 const bulkClassSelect = document.getElementById("bulkClassSelect");
 
+// Edit modal elements
+const editModal = document.getElementById("editModal");
+const editForm = document.getElementById("editForm");
+const cancelEditBtn = document.getElementById("cancelEditBtn");
+const saveEditBtn = document.getElementById("saveEditBtn");
+
 let bulkLearners = [];
 let allLearnersData = [];
 let allClassesData = [];
+let currentEditingLearnerId = null;
 
 /* ===========================
    UTILITIES
@@ -133,7 +141,9 @@ function validatePhoneNumber(phone) {
 function setupPhoneInputFormatter() {
   const phoneInputs = [
     document.getElementById("guardianPhone"),
-    document.getElementById("guardianPhone2")
+    document.getElementById("guardianPhone2"),
+    document.getElementById("editGuardianPhone"),
+    document.getElementById("editGuardianPhone2")
   ].filter(input => input !== null);
   
   phoneInputs.forEach(guardianPhoneInput => {
@@ -219,6 +229,12 @@ async function loadClasses() {
       filterOption.value = cls.id;
       filterOption.textContent = cls.name;
       classFilter.appendChild(filterOption);
+      
+      // Add to edit form class select
+      const editOption = document.createElement("option");
+      editOption.value = cls.id;
+      editOption.textContent = cls.name;
+      document.getElementById("editClassSelect").appendChild(editOption);
     });
   } catch (error) {
     showAlert("Error loading classes: " + error.message, "error");
@@ -320,6 +336,157 @@ form.addEventListener("submit", async (e) => {
 });
 
 /* ===========================
+   EDIT LEARNER - OPEN MODAL
+=========================== */
+window.editLearner = async function(learnerId) {
+  try {
+    // Fetch learner details
+    const { data: learner, error } = await supabase
+      .from("learners")
+      .select(`
+        id,
+        admission_no,
+        first_name,
+        last_name,
+        gender,
+        date_of_birth,
+        class_id,
+        guardian_phone,
+        guardian_phone_2
+      `)
+      .eq("id", learnerId)
+      .single();
+
+    if (error) throw error;
+
+    // Populate edit form
+    currentEditingLearnerId = learner.id;
+    document.getElementById("editAdmissionNo").value = learner.admission_no;
+    document.getElementById("editFirstName").value = learner.first_name;
+    document.getElementById("editLastName").value = learner.last_name;
+    document.getElementById("editGender").value = learner.gender || "";
+    document.getElementById("editDob").value = learner.date_of_birth || "";
+    document.getElementById("editClassSelect").value = learner.class_id;
+    document.getElementById("editGuardianPhone").value = learner.guardian_phone || "";
+    document.getElementById("editGuardianPhone2").value = learner.guardian_phone_2 || "";
+
+    // Show modal
+    editModal.classList.remove("hidden");
+    editModal.style.display = "flex";
+
+  } catch (error) {
+    showAlert("Error loading learner details: " + error.message, "error");
+  }
+};
+
+/* ===========================
+   SAVE EDIT
+=========================== */
+editForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  if (!currentEditingLearnerId) return;
+
+  setLoading(saveEditBtn, true);
+
+  try {
+    const guardianPhone = document.getElementById("editGuardianPhone").value.trim();
+    const guardianPhone2 = document.getElementById("editGuardianPhone2").value.trim();
+    
+    // Validate phones
+    if (guardianPhone) {
+      const validation = validatePhoneNumber(guardianPhone);
+      if (!validation.valid) {
+        showAlert(`Invalid phone number 1: ${validation.error}`, "error");
+        setLoading(saveEditBtn, false, "Save Changes");
+        return;
+      }
+    }
+    
+    if (guardianPhone2) {
+      const validation2 = validatePhoneNumber(guardianPhone2);
+      if (!validation2.valid) {
+        showAlert(`Invalid phone number 2: ${validation2.error}`, "error");
+        setLoading(saveEditBtn, false, "Save Changes");
+        return;
+      }
+    }
+
+    const updates = {
+      first_name: document.getElementById("editFirstName").value.trim(),
+      last_name: document.getElementById("editLastName").value.trim(),
+      gender: document.getElementById("editGender").value,
+      date_of_birth: document.getElementById("editDob").value,
+      class_id: document.getElementById("editClassSelect").value,
+      guardian_phone: guardianPhone || null,
+      guardian_phone_2: guardianPhone2 || null
+    };
+
+    const { error } = await supabase
+      .from("learners")
+      .update(updates)
+      .eq("id", currentEditingLearnerId);
+
+    if (error) throw error;
+
+    showAlert("Learner details updated successfully!");
+    closeEditModal();
+    await loadLearners();
+
+  } catch (error) {
+    showAlert("Error updating learner: " + error.message, "error");
+  } finally {
+    setLoading(saveEditBtn, false, "Save Changes");
+  }
+});
+
+/* ===========================
+   CLOSE EDIT MODAL
+=========================== */
+function closeEditModal() {
+  editModal.classList.add("hidden");
+  editModal.style.display = "none";
+  currentEditingLearnerId = null;
+  editForm.reset();
+}
+
+cancelEditBtn.addEventListener("click", closeEditModal);
+
+// Close modal when clicking outside
+editModal.addEventListener("click", function(e) {
+  if (e.target === editModal) {
+    closeEditModal();
+  }
+});
+
+/* ===========================
+   SOFT DELETE LEARNER
+=========================== */
+window.deleteLearner = async function(learnerId, learnerName) {
+  const confirmMsg = `Are you sure you want to remove "${learnerName}"?\n\nThis learner will be archived (not permanently deleted) and can be restored later if needed.`;
+  
+  if (!confirm(confirmMsg)) {
+    return;
+  }
+
+  try {
+    // Soft delete by setting active = false
+    const { error } = await supabase
+      .from("learners")
+      .update({ active: false })
+      .eq("id", learnerId);
+
+    if (error) throw error;
+
+    showAlert(`✅ "${learnerName}" has been archived successfully`);
+    await loadLearners();
+
+  } catch (error) {
+    showAlert("Error archiving learner: " + error.message, "error");
+  }
+};
+
+/* ===========================
    LOAD LEARNERS
 =========================== */
 async function loadLearners(filterClassId = null) {
@@ -331,6 +498,7 @@ async function loadLearners(filterClassId = null) {
     let query = supabase
       .from("learners")
       .select(`
+        id,
         admission_no,
         first_name,
         last_name,
@@ -389,6 +557,24 @@ async function loadLearners(filterClassId = null) {
         <td>${l.classes?.name || 'N/A'}</td>
         <td>${l.gender || 'N/A'}</td>
         <td>${phoneDisplay}</td>
+        <td>
+          <div style="display: flex; gap: 8px; justify-content: center;">
+            <button 
+              onclick="editLearner('${l.id}')" 
+              class="btn-icon btn-edit"
+              title="Edit learner"
+            >
+              ✏️
+            </button>
+            <button 
+              onclick="deleteLearner('${l.id}', '${l.first_name} ${l.last_name}')" 
+              class="btn-icon btn-delete"
+              title="Archive learner"
+            >
+              🗑️
+            </button>
+          </div>
+        </td>
       `;
       tableBody.appendChild(row);
     });
@@ -445,6 +631,67 @@ classFilter.addEventListener('change', (e) => {
 });
 
 /* ===========================
+   SEARCH FUNCTIONALITY
+=========================== */
+searchInput?.addEventListener('input', (e) => {
+  const searchTerm = e.target.value.toLowerCase().trim();
+  
+  // Get all table rows
+  const rows = tableBody.querySelectorAll('tr');
+  let visibleCount = 0;
+  
+  rows.forEach(row => {
+    // Get all text content from the row (excluding action buttons)
+    const admissionNo = row.cells[0]?.textContent.toLowerCase() || '';
+    const name = row.cells[1]?.textContent.toLowerCase() || '';
+    const className = row.cells[2]?.textContent.toLowerCase() || '';
+    const gender = row.cells[3]?.textContent.toLowerCase() || '';
+    const phone = row.cells[4]?.textContent.toLowerCase() || '';
+    
+    // Check if any field contains the search term
+    const matches = admissionNo.includes(searchTerm) ||
+                   name.includes(searchTerm) ||
+                   className.includes(searchTerm) ||
+                   gender.includes(searchTerm) ||
+                   phone.includes(searchTerm);
+    
+    // Show/hide row based on match
+    if (matches || searchTerm === '') {
+      row.style.display = '';
+      visibleCount++;
+    } else {
+      row.style.display = 'none';
+    }
+  });
+  
+  // Update stats to show filtered count
+  if (searchTerm) {
+    updateSearchStats(visibleCount, rows.length);
+  } else {
+    updateLearnerStats(allLearnersData);
+  }
+});
+
+// Update stats when searching
+function updateSearchStats(visible, total) {
+  const statsHtml = `
+    <div style="padding: 12px 16px; background: var(--background); border-radius: var(--radius-sm); border-left: 3px solid var(--primary);">
+      <div style="font-size: 0.85rem; color: var(--text-secondary);">Search Results</div>
+      <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary);">${visible} of ${total}</div>
+    </div>
+  `;
+  
+  // Show filtered stats alongside regular stats
+  const existingStats = learnerStats.innerHTML;
+  if (!existingStats.includes('Search Results')) {
+    learnerStats.innerHTML = statsHtml + existingStats;
+  } else {
+    // Update the search results number
+    learnerStats.querySelector('div:first-child .font-size\\:1\\.5rem, div:first-child div[style*="font-size: 1.5rem"]').textContent = `${visible} of ${total}`;
+  }
+}
+
+/* ===========================
    EXPORT TO EXCEL
 =========================== */
 exportExcelBtn.addEventListener('click', async () => {
@@ -461,6 +708,7 @@ exportExcelBtn.addEventListener('click', async () => {
         gender,
         date_of_birth,
         guardian_phone,
+        guardian_phone_2,
         classes(id, name, level)
       `)
       .eq("active", true)
