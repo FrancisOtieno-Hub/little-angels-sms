@@ -582,28 +582,35 @@ periodSelect.addEventListener("change", () => {
   }
 });
 
-// Compute date range from selection
+// Compute date range from selection — strings built manually to avoid timezone shifts
 function getDateRange() {
   const now = new Date();
-  let from, to;
+  const pad = (n) => String(n).padStart(2, "0");
 
   if (periodSelect.value === "this_month") {
-    from = new Date(now.getFullYear(), now.getMonth(), 1);
-    to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0-based
+    const lastDay = new Date(year, month + 1, 0).getDate();
+    return {
+      from: `${year}-${pad(month + 1)}-01`,
+      to: `${year}-${pad(month + 1)}-${pad(lastDay)}`
+    };
   } else if (periodSelect.value === "last_month") {
-    from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    to = new Date(now.getFullYear(), now.getMonth(), 0);
+    const year = now.getFullYear();
+    const month = now.getMonth(); // 0-based
+    const firstOfLastMonth = new Date(year, month - 1, 1);
+    const lastOfLastMonth = new Date(year, month, 0);
+    return {
+      from: `${firstOfLastMonth.getFullYear()}-${pad(firstOfLastMonth.getMonth() + 1)}-01`,
+      to: `${lastOfLastMonth.getFullYear()}-${pad(lastOfLastMonth.getMonth() + 1)}-${pad(lastOfLastMonth.getDate())}`
+    };
   } else if (periodSelect.value === "custom") {
     if (!dateFrom.value || !dateTo.value) return null;
-    from = new Date(dateFrom.value);
-    to = new Date(dateTo.value);
-  } else {
-    return null;
+    // Input values are already YYYY-MM-DD — use directly, no Date() conversion
+    return { from: dateFrom.value, to: dateTo.value };
   }
 
-  // Format to ISO date strings (YYYY-MM-DD) for Supabase queries
-  const fmt = (d) => d.toISOString().split("T")[0];
-  return { from: fmt(from), to: fmt(to) };
+  return null;
 }
 
 function getPeriodLabel() {
