@@ -17,7 +17,58 @@
     </div>
     
     <div id="alertContainer"></div>
-    
+
+    <!-- ===================== -->
+    <!-- PERIOD FILTER CARD    -->
+    <!-- ===================== -->
+    <div class="card">
+      <h2>Print Receipts by Period</h2>
+      <p class="text-muted mb-20">Select a period to fetch all learners who made payments within that range</p>
+
+      <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+        <div>
+          <label style="display: block; font-weight: 600; margin-bottom: 6px;">Period</label>
+          <select id="periodSelect" style="padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; min-width: 180px;">
+            <option value="">-- Select Period --</option>
+            <option value="this_month">This Month</option>
+            <option value="last_month">Last Month</option>
+            <option value="custom">Custom Date Range</option>
+          </select>
+        </div>
+
+        <div id="customDateRange" style="display: none; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+          <div>
+            <label style="display: block; font-weight: 600; margin-bottom: 6px;">From</label>
+            <input type="date" id="dateFrom" style="padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem;" />
+          </div>
+          <div>
+            <label style="display: block; font-weight: 600; margin-bottom: 6px;">To</label>
+            <input type="date" id="dateTo" style="padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem;" />
+          </div>
+        </div>
+
+        <button id="fetchByPeriodBtn" class="btn btn-primary" style="height: fit-content;">Fetch Learners</button>
+      </div>
+    </div>
+
+    <!-- ========================= -->
+    <!-- PERIOD RESULTS CARD       -->
+    <!-- ========================= -->
+    <div class="card hidden" id="periodResultsCard">
+      <h2>Learners with Payments</h2>
+      <p class="text-muted mb-20" id="periodResultsSubtitle"></p>
+
+      <div id="periodLearnersList"></div>
+
+      <div style="margin-top: 20px; display: flex; gap: 12px; align-items: center;">
+        <button id="printAllBtn" class="btn btn-primary">🖨️ Print All Receipts</button>
+        <span id="periodResultsCount" class="text-muted"></span>
+      </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- EXISTING SEARCH CARD  -->
+    <!-- ===================== -->
     <div class="card">
       <h2>Search Learner</h2>
       <p class="text-muted mb-20">Start typing to search for a learner</p>
