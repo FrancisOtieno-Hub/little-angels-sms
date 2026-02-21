@@ -55,15 +55,18 @@
     <!-- PERIOD RESULTS CARD       -->
     <!-- ========================= -->
     <div class="card hidden" id="periodResultsCard">
-      <h2>Learners with Payments</h2>
-      <p class="text-muted mb-20" id="periodResultsSubtitle"></p>
-
-      <div id="periodLearnersList"></div>
-
-      <div style="margin-top: 20px; display: flex; gap: 12px; align-items: center;">
-        <button id="printAllBtn" class="btn btn-primary">🖨️ Print All Receipts</button>
-        <span id="periodResultsCount" class="text-muted"></span>
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+        <div>
+          <h2 style="margin-bottom: 4px;">Learners with Payments</h2>
+          <p class="text-muted" id="periodResultsSubtitle"></p>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0;">
+          <button id="printAllBtn" class="btn btn-primary">Print All Receipts</button>
+          <span id="periodResultsCount" class="text-muted" style="font-size: 0.85rem;"></span>
+        </div>
       </div>
+
+      <div id="periodLearnersList" style="margin-top: 12px;"></div>
     </div>
 
     <!-- ===================== -->
