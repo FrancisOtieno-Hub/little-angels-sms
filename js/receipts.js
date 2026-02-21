@@ -928,18 +928,12 @@ function renderAllReceipts(feeInfoResults, term) {
       </div>
     `;
 
-    // Each learner gets 2 receipt copies on one page; page-break-after except for the last learner
-    const isLast = index === feeInfoResults.length - 1;
-    const pageBreakStyle = isLast ? '' : 'page-break-after: always;';
-
+    // Wrap each learner's two copies in their own receipt-container so the
+    // existing print CSS (fixed A4 height, flex column) keeps both on one page.
     return `
-      <div style="${pageBreakStyle} page-break-inside: avoid; display: block;">
-        <div style="page-break-inside: avoid; page-break-after: avoid;">
-          <div class="receipt ${feeInfo ? 'receipt-with-custom-fee' : ''}">${receiptHTML}</div>
-        </div>
-        <div style="page-break-inside: avoid; page-break-before: avoid;">
-          <div class="receipt ${feeInfo ? 'receipt-with-custom-fee' : ''}">${receiptHTML}</div>
-        </div>
+      <div class="receipt-container">
+        <div class="receipt ${feeInfo ? 'receipt-with-custom-fee' : ''}">${receiptHTML}</div>
+        <div class="receipt ${feeInfo ? 'receipt-with-custom-fee' : ''}">${receiptHTML}</div>
       </div>
     `;
   }).join("");
