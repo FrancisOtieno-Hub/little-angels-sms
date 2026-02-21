@@ -560,6 +560,391 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
 }
 
 /* ===========================
+   PERIOD FILTER FEATURE
+=========================== */
+const periodSelect = document.getElementById("periodSelect");
+const customDateRange = document.getElementById("customDateRange");
+const dateFrom = document.getElementById("dateFrom");
+const dateTo = document.getElementById("dateTo");
+const fetchByPeriodBtn = document.getElementById("fetchByPeriodBtn");
+const periodResultsCard = document.getElementById("periodResultsCard");
+const periodResultsSubtitle = document.getElementById("periodResultsSubtitle");
+const periodLearnersList = document.getElementById("periodLearnersList");
+const printAllBtn = document.getElementById("printAllBtn");
+const periodResultsCount = document.getElementById("periodResultsCount");
+
+// Show/hide custom date range inputs
+periodSelect.addEventListener("change", () => {
+  if (periodSelect.value === "custom") {
+    customDateRange.style.display = "flex";
+  } else {
+    customDateRange.style.display = "none";
+  }
+});
+
+// Compute date range from selection
+function getDateRange() {
+  const now = new Date();
+  let from, to;
+
+  if (periodSelect.value === "this_month") {
+    from = new Date(now.getFullYear(), now.getMonth(), 1);
+    to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  } else if (periodSelect.value === "last_month") {
+    from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    to = new Date(now.getFullYear(), now.getMonth(), 0);
+  } else if (periodSelect.value === "custom") {
+    if (!dateFrom.value || !dateTo.value) return null;
+    from = new Date(dateFrom.value);
+    to = new Date(dateTo.value);
+  } else {
+    return null;
+  }
+
+  // Format to ISO date strings (YYYY-MM-DD) for Supabase queries
+  const fmt = (d) => d.toISOString().split("T")[0];
+  return { from: fmt(from), to: fmt(to) };
+}
+
+function getPeriodLabel() {
+  const now = new Date();
+  if (periodSelect.value === "this_month") {
+    return now.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  } else if (periodSelect.value === "last_month") {
+    const last = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    return last.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  } else if (periodSelect.value === "custom") {
+    return `${dateFrom.value} to ${dateTo.value}`;
+  }
+  return "";
+}
+
+// Fetch learners who paid in the selected period
+fetchByPeriodBtn.addEventListener("click", async () => {
+  const range = getDateRange();
+
+  if (!range) {
+    showAlert("Please select a period or fill in both From and To dates.", "error");
+    return;
+  }
+
+  setLoading(fetchByPeriodBtn, true, "Fetch Learners");
+  periodResultsCard.classList.add("hidden");
+  container.classList.add("hidden");
+
+  try {
+    const term = await getActiveTerm();
+    if (!term) {
+      setLoading(fetchByPeriodBtn, false, "Fetch Learners");
+      return;
+    }
+
+    // Fetch all payments within the date range for the active term
+    const { data: payments, error } = await supabase
+      .from("payments")
+      .select(`
+        *,
+        learners(
+          id,
+          admission_no,
+          first_name,
+          last_name,
+          class_id,
+          classes(name)
+        )
+      `)
+      .eq("term_id", term.id)
+      .gte("payment_date", range.from)
+      .lte("payment_date", range.to)
+      .order("payment_date");
+
+    if (error) throw error;
+
+    if (!payments || payments.length === 0) {
+      showAlert("No payments found for the selected period.", "error");
+      setLoading(fetchByPeriodBtn, false, "Fetch Learners");
+      return;
+    }
+
+    // Group payments by learner
+    const learnerMap = new Map();
+    payments.forEach(payment => {
+      const learner = payment.learners;
+      if (!learner) return;
+      if (!learnerMap.has(learner.id)) {
+        learnerMap.set(learner.id, { learner, payments: [] });
+      }
+      // Store payment without the nested learner object to keep it clean
+      const { learners: _l, ...cleanPayment } = payment;
+      learnerMap.get(learner.id).payments.push(cleanPayment);
+    });
+
+    const grouped = Array.from(learnerMap.values());
+
+    // Store on window for use during print
+    window._periodGrouped = grouped;
+    window._periodTerm = term;
+
+    displayPeriodResults(grouped, term, range);
+
+  } catch (error) {
+    showAlert("Error fetching payments: " + error.message, "error");
+  } finally {
+    setLoading(fetchByPeriodBtn, false, "Fetch Learners");
+  }
+});
+
+// Render the review list of learners + their payments
+function displayPeriodResults(grouped, term, range) {
+  const label = getPeriodLabel();
+  periodResultsSubtitle.textContent = `Period: ${label} — ${grouped.length} learner(s) found`;
+  periodResultsCount.textContent = `${grouped.length} learner(s) • ${grouped.reduce((s, g) => s + g.payments.length, 0)} payment(s) total`;
+
+  periodLearnersList.innerHTML = grouped.map((group, i) => {
+    const { learner, payments } = group;
+    const total = payments.reduce((s, p) => s + Number(p.amount), 0);
+    const paymentRows = payments.map(p => `
+      <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 0.9rem; color: var(--text-secondary);">
+        <span>${new Date(p.payment_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</span>
+        <span>KES ${Number(p.amount).toLocaleString()}</span>
+      </div>
+    `).join("");
+
+    return `
+      <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; margin-bottom: 12px; background: var(--background);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <strong style="font-size: 1rem;">${learner.first_name} ${learner.last_name}</strong>
+            <span style="color: var(--text-secondary); font-size: 0.9rem; margin-left: 10px;">${learner.admission_no} • ${learner.classes?.name || 'N/A'}</span>
+          </div>
+          <div style="text-align: right;">
+            <span style="font-weight: 600; color: var(--primary);">KES ${total.toLocaleString()}</span>
+            <span style="color: var(--text-secondary); font-size: 0.85rem; margin-left: 6px;">(${payments.length} payment${payments.length > 1 ? 's' : ''})</span>
+          </div>
+        </div>
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border);">
+          ${paymentRows}
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  periodResultsCard.classList.remove("hidden");
+  periodResultsCard.scrollIntoView({ behavior: "smooth" });
+}
+
+// Print all receipts for the period — one cumulative receipt per learner, page break between each
+printAllBtn.addEventListener("click", async () => {
+  const grouped = window._periodGrouped;
+  const term = window._periodTerm;
+
+  if (!grouped || grouped.length === 0) {
+    showAlert("No learners to print.", "error");
+    return;
+  }
+
+  setLoading(printAllBtn, true, "Print All Receipts");
+
+  try {
+    // Fetch fee info for every learner in parallel
+    const feeInfoResults = await Promise.all(
+      grouped.map(async ({ learner, payments }) => {
+        // Check custom fee
+        const { data: customFeeData } = await supabase
+          .from("custom_fees")
+          .select("custom_amount, fee_type, reason")
+          .eq("learner_id", learner.id)
+          .eq("term_id", term.id)
+          .maybeSingle();
+
+        let totalFees = 0;
+        let feeInfo = null;
+
+        if (customFeeData) {
+          totalFees = Number(customFeeData.custom_amount);
+          feeInfo = {
+            type: customFeeData.fee_type,
+            reason: customFeeData.reason
+          };
+        } else {
+          const { data: fee } = await supabase
+            .from("fees")
+            .select("amount")
+            .eq("class_id", learner.class_id)
+            .eq("term_id", term.id)
+            .maybeSingle();
+
+          totalFees = fee?.amount || 0;
+        }
+
+        // NOTE: totalPaid here is for ALL term payments for balance calculation,
+        // but the payments shown on the receipt are only the period payments.
+        // Fetch all term payments for accurate balance.
+        const { data: allTermPayments } = await supabase
+          .from("payments")
+          .select("amount")
+          .eq("learner_id", learner.id)
+          .eq("term_id", term.id);
+
+        const totalPaidTerm = (allTermPayments || []).reduce((s, p) => s + Number(p.amount), 0);
+        const balance = totalFees - totalPaidTerm;
+
+        return { learner, payments, totalFees, totalPaidTerm, balance, feeInfo };
+      })
+    );
+
+    renderAllReceipts(feeInfoResults, term);
+
+    setTimeout(() => {
+      window.print();
+    }, 500);
+
+  } catch (error) {
+    showAlert("Error preparing receipts: " + error.message, "error");
+  } finally {
+    setLoading(printAllBtn, false, "Print All Receipts");
+  }
+});
+
+// Build one receipt block per learner; each pair of receipt copies separated from the next learner by a page break
+function renderAllReceipts(feeInfoResults, term) {
+  const allHTML = feeInfoResults.map(({ learner, payments, totalFees, totalPaidTerm, balance, feeInfo }, index) => {
+    const paymentItems = payments.map(p => {
+      const date = new Date(p.payment_date).toLocaleDateString('en-US', { 
+        day: '2-digit',
+        month: '2-digit'
+      });
+      const amount = Number(p.amount).toLocaleString('en-US', { 
+        minimumFractionDigits: 2, 
+        maximumFractionDigits: 2 
+      });
+      return `
+        <div class="payment-item">
+          <span class="date">${date}:</span>
+          <span class="amount">KES ${amount}</span>
+        </div>
+      `;
+    }).join("");
+
+    let feeNoteHtml = '';
+    if (feeInfo) {
+      const feeTypeLabel = {
+        'full_sponsorship': 'Full Sponsorship',
+        'partial_sponsorship': 'Partial Sponsorship',
+        'custom_amount': 'Custom Fee Arrangement'
+      }[feeInfo.type] || 'Custom Fee';
+
+      feeNoteHtml = `
+        <div class="fee-note-box">
+          <strong>📋 ${feeTypeLabel}</strong>
+          ${feeInfo.reason ? `<br><em>${feeInfo.reason}</em>` : ''}
+        </div>
+      `;
+    }
+
+    const receiptHTML = `
+      <div class="receipt-header">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
+          <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
+          <div style="text-align: center; flex: 1; margin: 0 10px;">
+            <h1 style="margin: 0;">LITTLE ANGELS ACADEMY</h1>
+            <p class="motto" style="margin: 2px 0;">Quality Education, Service and Discipline</p>
+          </div>
+          <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
+        </div>
+        <p class="contact" style="margin: 2px 0;">P.O. Box 7093, Thika | Tel: 0720 985 433</p>
+      </div>
+
+      <div class="receipt-body">
+        <div class="receipt-title">FEE PAYMENT RECEIPT</div>
+
+        <div class="info-section">
+          <div class="info-row">
+            <div class="info-label">Admission No:</div>
+            <div class="info-value">${learner.admission_no}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Student Name:</div>
+            <div class="info-value">${learner.first_name} ${learner.last_name}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Class:</div>
+            <div class="info-value">${learner.classes?.name || 'N/A'}</div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Academic Term:</div>
+            <div class="info-value">Year ${term.year} - Term ${term.term}</div>
+          </div>
+        </div>
+
+        ${feeNoteHtml}
+
+        <div class="payments-horizontal">
+          <h3>Payments Received:</h3>
+          <div class="payment-items">
+            ${paymentItems}
+          </div>
+        </div>
+
+        <div class="summary-section">
+          <div class="summary-row">
+            <span>Total Fees for Term:</span>
+            <span><strong>KES ${totalFees.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></span>
+          </div>
+          <div class="summary-row">
+            <span>Total Amount Paid:</span>
+            <span><strong>KES ${totalPaidTerm.toLocaleString('en-US', { minimumFractionDigits: 2 })}</strong></span>
+          </div>
+          <div class="summary-row total">
+            <span>Balance ${balance > 0 ? 'Due' : balance < 0 ? 'Overpayment' : 'Cleared'}:</span>
+            <span>KES ${Math.abs(balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+          </div>
+        </div>
+
+        <div class="signature-section">
+          <div class="signature-box">
+            <div class="signature-line">Received By</div>
+          </div>
+          <div class="signature-box">
+            <div class="signature-line">Date: ${new Date().toLocaleDateString('en-US', { 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="receipt-footer">
+        <p><strong>Thank you for your payment</strong></p>
+        <p>This is an official receipt from Little Angels Academy. Please retain for your records.</p>
+        <p>Printed: ${new Date().toLocaleString('en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        })}</p>
+      </div>
+    `;
+
+    // Each learner gets 2 receipt copies on one page; page-break-after except for the last learner
+    const isLast = index === feeInfoResults.length - 1;
+    const pageBreak = isLast ? '' : 'style="page-break-after: always;"';
+
+    return `
+      <div ${pageBreak}>
+        <div class="receipt ${feeInfo ? 'receipt-with-custom-fee' : ''}">${receiptHTML}</div>
+        <div class="receipt ${feeInfo ? 'receipt-with-custom-fee' : ''}">${receiptHTML}</div>
+      </div>
+    `;
+  }).join("");
+
+  container.innerHTML = allHTML;
+  container.classList.remove("hidden");
+}
+
+/* ===========================
    INIT
 =========================== */
 async function initPage() {
