@@ -1,19 +1,25 @@
-const CACHE_NAME = 'laa-sms-v1';
+const CACHE_NAME = 'laa-sms-v2';
 const urlsToCache = [
   '/',
   '/index.html',
   '/dashboard.html',
   '/learners.html',
   '/fees.html',
+  '/custom-fees.html',
   '/payments.html',
   '/receipts.html',
+  '/fee-reports.html',
+  '/sms.html',
   '/promotion.html',
   '/css/style.css',
   '/js/auth.js',
   '/js/learners.js',
   '/js/fees.js',
+  '/js/custom-fees.js',
   '/js/payments.js',
   '/js/receipts.js',
+  '/js/fee-reports.js',
+  '/js/sms.js',
   '/js/promotion.js',
   '/js/supabase.js',
   '/assets/logo.png'
