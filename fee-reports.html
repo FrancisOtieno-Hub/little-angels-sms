@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="css/style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </head>
 <body>
   <div class="dashboard">
@@ -54,9 +55,14 @@
     <div class="card hidden" id="classSummaryCard">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 style="margin: 0;">Summary by Class</h2>
-        <button id="exportClassSummaryBtn" class="btn btn-primary" style="width: auto;">
-          📄 Export to PDF
-        </button>
+        <div style="display: flex; gap: 8px;">
+          <button id="exportClassSummaryBtn" class="btn btn-primary" style="width: auto;">
+            📄 Export to PDF
+          </button>
+          <button id="exportClassSummaryXlsxBtn" class="btn btn-primary" style="width: auto;">
+            📊 Export to Excel
+          </button>
+        </div>
       </div>
       <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
         <table id="classSummaryTable">
@@ -79,9 +85,14 @@
     <div class="card hidden" id="learnersReportCard">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 style="margin: 0;">Individual Learner Payments</h2>
-        <button id="exportLearnersBtn" class="btn btn-primary" style="width: auto;">
-          📄 Export to PDF
-        </button>
+        <div style="display: flex; gap: 8px;">
+          <button id="exportLearnersBtn" class="btn btn-primary" style="width: auto;">
+            📄 Export to PDF
+          </button>
+          <button id="exportLearnersXlsxBtn" class="btn btn-primary" style="width: auto;">
+            📊 Export to Excel
+          </button>
+        </div>
       </div>
       <div id="loadingReport" class="text-center text-muted">Loading report...</div>
       <div id="reportTableWrapper" class="hidden" style="max-height: 500px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
