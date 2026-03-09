@@ -529,18 +529,21 @@ async function loadCustomFeesList(classFilter = null, typeFilterValue = null) {
       return;
     }
 
+    // --- Single bulk fetch for all class fees needed ---
+    const classIds = [...new Set(filteredData.map(cf => cf.learners?.class_id).filter(Boolean))];
+    const { data: classFees = [] } = await supabase
+      .from("fees")
+      .select("class_id, amount")
+      .eq("term_id", activeTerm.id)
+      .in("class_id", classIds);
+
+    // Build lookup: class_id → amount
+    const classFeeMap = {};
+    classFees.forEach(f => { classFeeMap[f.class_id] = Number(f.amount); });
+
     for (const cf of filteredData) {
       const learner = cf.learners;
-      
-      // Fetch class fee for comparison
-      const { data: feeData } = await supabase
-        .from("fees")
-        .select("amount")
-        .eq("class_id", learner.class_id)
-        .eq("term_id", activeTerm.id)
-        .maybeSingle();
-
-      const classFeeAmount = feeData?.amount || 0;
+      const classFeeAmount = classFeeMap[learner?.class_id] ?? 0;
 
       const feeTypeLabel = {
         'full_sponsorship': '🎓 Full Sponsorship',
