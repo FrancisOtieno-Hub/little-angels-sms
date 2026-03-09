@@ -494,6 +494,97 @@ exportLearnersBtn.addEventListener("click", () => {
 });
 
 /* ===========================
+   EXPORT CLASS SUMMARY TO EXCEL
+=========================== */
+document.getElementById("exportClassSummaryXlsxBtn").addEventListener("click", () => {
+  if (!classSummaryData.length) {
+    showAlert("Generate a report first", "error");
+    return;
+  }
+
+  const rows = classSummaryData.map(cls => ({
+    'Class':          cls.class_name,
+    'Total Learners': cls.learner_count,
+    'Expected Fees (KES)': cls.total_expected,
+    'Total Paid (KES)':    cls.total_paid,
+    'Balance (KES)':       cls.total_balance,
+    'Collection %': cls.total_expected > 0
+      ? parseFloat(((cls.total_paid / cls.total_expected) * 100).toFixed(1))
+      : 0
+  }));
+
+  // Totals row
+  rows.push({
+    'Class': 'TOTAL',
+    'Total Learners': classSummaryData.reduce((s, c) => s + c.learner_count, 0),
+    'Expected Fees (KES)': classSummaryData.reduce((s, c) => s + c.total_expected, 0),
+    'Total Paid (KES)':    classSummaryData.reduce((s, c) => s + c.total_paid, 0),
+    'Balance (KES)':       classSummaryData.reduce((s, c) => s + c.total_balance, 0),
+    'Collection %': ''
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [{ wch: 18 }, { wch: 15 }, { wch: 20 }, { wch: 18 }, { wch: 15 }, { wch: 14 }];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Class Summary');
+
+  // Add metadata sheet
+  const meta = XLSX.utils.aoa_to_sheet([
+    ['Little Angels Academy'],
+    ['Fee Collection Summary by Class'],
+    [`Term: Year ${activeTerm.year} - Term ${activeTerm.term}`],
+    [`Generated: ${new Date().toLocaleString()}`]
+  ]);
+  XLSX.utils.book_append_sheet(wb, meta, 'Info');
+
+  XLSX.writeFile(wb, `Class_Fee_Summary_${new Date().toISOString().split('T')[0]}.xlsx`);
+  showAlert("✓ Excel exported successfully!");
+});
+
+/* ===========================
+   EXPORT LEARNERS REPORT TO EXCEL
+=========================== */
+document.getElementById("exportLearnersXlsxBtn").addEventListener("click", () => {
+  if (!reportData.length) {
+    showAlert("Generate a report first", "error");
+    return;
+  }
+
+  const rows = reportData.map(l => ({
+    'Adm No':            l.admission_no,
+    'Name':              `${l.first_name} ${l.last_name}`,
+    'Class':             l.class_name,
+    'Total Fees (KES)':  l.total_fees,
+    'Amount Paid (KES)': l.total_paid,
+    'Balance (KES)':     l.balance,
+    'Payment Dates':     l.payment_dates,
+    'Status':            l.status.charAt(0).toUpperCase() + l.status.slice(1)
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  ws['!cols'] = [
+    { wch: 12 }, { wch: 22 }, { wch: 14 }, { wch: 16 },
+    { wch: 16 }, { wch: 14 }, { wch: 24 }, { wch: 10 }
+  ];
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Learner Payments');
+
+  // Add metadata sheet
+  const meta = XLSX.utils.aoa_to_sheet([
+    ['Little Angels Academy'],
+    ['Individual Learner Fee Report'],
+    [`Term: Year ${activeTerm.year} - Term ${activeTerm.term}`],
+    [`Generated: ${new Date().toLocaleString()}`]
+  ]);
+  XLSX.utils.book_append_sheet(wb, meta, 'Info');
+
+  XLSX.writeFile(wb, `Learners_Fee_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+  showAlert("✓ Excel exported successfully!");
+});
+
+/* ===========================
    INIT
 =========================== */
 async function initPage() {
