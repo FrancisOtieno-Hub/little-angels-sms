@@ -146,40 +146,62 @@ generateReportBtn.addEventListener("click", async () => {
       return;
     }
     
-    // --- BULK FETCH: 3 queries total regardless of learner count ---
+    // --- BULK FETCH with chunking to avoid URL length limits ---
 
-    const learnerIds  = learners.map(l => l.id);
-    const classIds    = [...new Set(learners.map(l => l.class_id))];
+    // Supabase passes .in() values as URL query params; too many IDs cause a 400.
+    // We chunk large arrays and merge results client-side.
+    async function fetchInChunks(table, selectCols, filterCol, ids, extraFilters = {}) {
+      const CHUNK = 100;
+      const results = [];
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        let query = supabase
+          .from(table)
+          .select(selectCols)
+          .in(filterCol, ids.slice(i, i + CHUNK));
+        for (const [col, val] of Object.entries(extraFilters)) {
+          query = query.eq(col, val);
+        }
+        const { data, error } = await query;
+        if (error) throw error;
+        if (data) results.push(...data);
+      }
+      return results;
+    }
 
-    // 1. All class fees for this term
-    const { data: allClassFees = [] } = await supabase
+    const learnerIds = learners.map(l => l.id);
+    const classIds   = [...new Set(learners.map(l => l.class_id))];
+
+    // 1. All class fees for this term (class count is small, no chunking needed)
+    const { data: allClassFees = [], error: feesError } = await supabase
       .from("fees")
       .select("class_id, amount")
       .eq("term_id", activeTerm.id)
       .in("class_id", classIds);
+    if (feesError) throw feesError;
 
     // Build lookup: class_id → amount
     const classFeeMap = {};
     allClassFees.forEach(f => { classFeeMap[f.class_id] = Number(f.amount); });
 
-    // 2. All custom fees for these learners this term
-    const { data: allCustomFees = [] } = await supabase
-      .from("custom_fees")
-      .select("learner_id, custom_amount")
-      .eq("term_id", activeTerm.id)
-      .in("learner_id", learnerIds);
+    // 2. All custom fees for these learners this term (chunked)
+    const allCustomFees = await fetchInChunks(
+      "custom_fees", "learner_id, custom_amount",
+      "learner_id", learnerIds,
+      { term_id: activeTerm.id }
+    );
 
     // Build lookup: learner_id → custom_amount
     const customFeeMap = {};
     allCustomFees.forEach(cf => { customFeeMap[cf.learner_id] = Number(cf.custom_amount); });
 
-    // 3. All payments for these learners this term
-    const { data: allPayments = [] } = await supabase
-      .from("payments")
-      .select("learner_id, amount, payment_date")
-      .eq("term_id", activeTerm.id)
-      .in("learner_id", learnerIds)
-      .order("payment_date");
+    // 3. All payments for these learners this term (chunked)
+    const allPayments = await fetchInChunks(
+      "payments", "learner_id, amount, payment_date",
+      "learner_id", learnerIds,
+      { term_id: activeTerm.id }
+    );
+    // Sort by payment_date after merging chunks
+    allPayments.sort((a, b) => new Date(a.payment_date) - new Date(b.payment_date));
 
     // Build lookup: learner_id → [payments]
     const paymentsMap = {};
