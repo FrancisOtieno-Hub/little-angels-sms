@@ -146,71 +146,84 @@ generateReportBtn.addEventListener("click", async () => {
       return;
     }
     
-    // Fetch fees, custom fees, and payments for all learners
+    // --- BULK FETCH: 3 queries total regardless of learner count ---
+
+    const learnerIds  = learners.map(l => l.id);
+    const classIds    = [...new Set(learners.map(l => l.class_id))];
+
+    // 1. All class fees for this term
+    const { data: allClassFees = [] } = await supabase
+      .from("fees")
+      .select("class_id, amount")
+      .eq("term_id", activeTerm.id)
+      .in("class_id", classIds);
+
+    // Build lookup: class_id → amount
+    const classFeeMap = {};
+    allClassFees.forEach(f => { classFeeMap[f.class_id] = Number(f.amount); });
+
+    // 2. All custom fees for these learners this term
+    const { data: allCustomFees = [] } = await supabase
+      .from("custom_fees")
+      .select("learner_id, custom_amount")
+      .eq("term_id", activeTerm.id)
+      .in("learner_id", learnerIds);
+
+    // Build lookup: learner_id → custom_amount
+    const customFeeMap = {};
+    allCustomFees.forEach(cf => { customFeeMap[cf.learner_id] = Number(cf.custom_amount); });
+
+    // 3. All payments for these learners this term
+    const { data: allPayments = [] } = await supabase
+      .from("payments")
+      .select("learner_id, amount, payment_date")
+      .eq("term_id", activeTerm.id)
+      .in("learner_id", learnerIds)
+      .order("payment_date");
+
+    // Build lookup: learner_id → [payments]
+    const paymentsMap = {};
+    allPayments.forEach(p => {
+      if (!paymentsMap[p.learner_id]) paymentsMap[p.learner_id] = [];
+      paymentsMap[p.learner_id].push(p);
+    });
+
+    // --- JOIN in JS ---
     reportData = [];
-    
+
     for (const learner of learners) {
-      // Check for custom fee first
-      const { data: customFee } = await supabase
-        .from("custom_fees")
-        .select("custom_amount")
-        .eq("learner_id", learner.id)
-        .eq("term_id", activeTerm.id)
-        .maybeSingle();
-      
-      let totalFees = 0;
-      
-      if (customFee) {
-        totalFees = Number(customFee.custom_amount);
-      } else {
-        const { data: fee } = await supabase
-          .from("fees")
-          .select("amount")
-          .eq("class_id", learner.class_id)
-          .eq("term_id", activeTerm.id)
-          .maybeSingle();
-        
-        totalFees = fee?.amount || 0;
-      }
-      
-      // Fetch payments
-      const { data: payments } = await supabase
-        .from("payments")
-        .select("amount, payment_date")
-        .eq("learner_id", learner.id)
-        .eq("term_id", activeTerm.id)
-        .order("payment_date");
-      
-      const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-      const balance = totalFees - totalPaid;
-      
-      const status = balance === 0 ? "paid" : (totalPaid > 0 ? "partial" : "unpaid");
-      
+      const totalFees = learner.id in customFeeMap
+        ? customFeeMap[learner.id]
+        : (classFeeMap[learner.class_id] ?? 0);
+
+      const payments  = paymentsMap[learner.id] || [];
+      const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+      const balance   = totalFees - totalPaid;
+      const status    = balance === 0 ? "paid" : (totalPaid > 0 ? "partial" : "unpaid");
+
       // Filter by status if selected
-      if (selectedStatus && status !== selectedStatus) {
-        continue;
-      }
-      
-      const paymentDates = payments?.map(p => 
-        new Date(p.payment_date).toLocaleDateString('en-US', { 
-          day: '2-digit', 
-          month: 'short' 
+      if (selectedStatus && status !== selectedStatus) continue;
+
+      const paymentDates = payments.map(p =>
+        new Date(p.payment_date).toLocaleDateString('en-US', {
+          day: '2-digit',
+          month: 'short'
         })
       ).join(', ') || '-';
-      
+
       reportData.push({
-        admission_no: learner.admission_no,
-        first_name: learner.first_name,
-        last_name: learner.last_name,
-        class_name: learner.classes?.name || 'N/A',
-        class_id: learner.class_id,
-        class_level: learner.classes?.level || 0,
-        total_fees: totalFees,
-        total_paid: totalPaid,
-        balance: balance,
+        admission_no:  learner.admission_no,
+        first_name:    learner.first_name,
+        last_name:     learner.last_name,
+        class_name:    learner.classes?.name || 'N/A',
+        class_id:      learner.class_id,
+        class_level:   learner.classes?.level || 0,
+        total_fees:    totalFees,
+        total_paid:    totalPaid,
+        balance:       balance,
         payment_dates: paymentDates,
-        status: status,
-        payment_count: payments?.length || 0
+        status:        status,
+        payment_count: payments.length
       });
     }
     
