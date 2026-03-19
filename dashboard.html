@@ -54,30 +54,7 @@
     .hstat-value { font-family:'Cormorant Garamond',serif;font-size:1.55rem;font-weight:700;color:white;line-height:1; }
     .hstat-sub { font-size:.7rem;color:rgba(201,168,76,.65);margin-top:3px; }
 
-    /* Nav cards grid */
-    .nav-cards { display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px; }
-    .nav-card {
-      background:white;border-radius:var(--radius);padding:22px 20px;
-      border:1.5px solid var(--border);position:relative;overflow:hidden;
-      cursor:pointer;transition:all .3s var(--ease);text-decoration:none;display:block;
-    }
-    .nav-card:hover { transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:transparent; }
-    .nav-card::before {
-      content:'';position:absolute;top:0;left:0;right:0;height:2.5px;
-      background:var(--c-accent,linear-gradient(to right,var(--gold),var(--gold2)));
-      transform:scaleX(0);transform-origin:left;transition:transform .32s var(--ease);
-    }
-    .nav-card:hover::before { transform:scaleX(1); }
-    .nc-icon { width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;transition:transform .3s var(--ease); }
-    .nav-card:hover .nc-icon { transform:scale(1.1) rotate(-3deg); }
-    .nc-title { font-weight:600;font-size:.87rem;color:var(--text-primary);margin-bottom:4px;letter-spacing:.01em; }
-    .nc-desc { font-size:.73rem;color:var(--text-secondary);line-height:1.45;font-weight:300; }
-    .nc-arrow {
-      position:absolute;bottom:18px;right:18px;width:26px;height:26px;border-radius:7px;
-      background:var(--bg);display:flex;align-items:center;justify-content:center;
-      color:var(--text-muted);transition:all .22s var(--ease);
-    }
-    .nav-card:hover .nc-arrow { background:var(--navy);color:white;transform:translate(2px,-2px); }
+
 
     /* Analytics */
     .analytics-row { display:grid;grid-template-columns:1.65fr 1fr;gap:20px;margin-bottom:24px; }
@@ -120,14 +97,12 @@
     .sec-link:hover { opacity:1; }
 
     @media(max-width:1100px) {
-      .nav-cards { grid-template-columns:repeat(2,1fr); }
       .analytics-row { grid-template-columns:1fr; }
       .bottom-row { grid-template-columns:1fr; }
     }
     @media(max-width:768px) {
       .hero-banner { grid-template-columns:1fr; }
       .hero-stats { grid-template-columns:repeat(2,1fr); }
-      .nav-cards { grid-template-columns:repeat(2,1fr); }
     }
   </style>
 </head>
@@ -143,7 +118,7 @@
       <div class="hero-ring hero-ring-2"></div>
       <div class="hero-left">
         <div class="hero-eyebrow">Dashboard Overview</div>
-        <h1 class="hero-heading">Good Morning, Admin
+        <h1 class="hero-heading" id="heroGreeting"></h1>
           <span class="hero-wave">
             <svg width="28" height="28" viewBox="0 0 32 32" fill="none" style="display:inline-block;vertical-align:middle;margin-left:2px;">
               <rect x="10" y="8" width="4" height="14" rx="2" fill="rgba(201,168,76,0.85)"/>
@@ -186,51 +161,6 @@
           <div class="hstat-sub">This term</div>
         </div>
       </div>
-    </div>
-
-    <!-- QUICK NAV -->
-    <div class="sec-hd"><h2 class="sec-title">Quick Navigation</h2></div>
-    <div class="nav-cards">
-      <a href="learners.html" class="nav-card" style="--c-accent:linear-gradient(to right,#3b82f6,#60a5fa)">
-        <div class="nc-icon" style="background:#eff6ff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0-3-3.87"/></svg></div>
-        <div class="nc-title">Learner Registration</div><div class="nc-desc">Add, update & manage student records</div>
-        <div class="nc-arrow"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
-      </a>
-      <a href="fees.html" class="nav-card" style="--c-accent:linear-gradient(to right,var(--gold),var(--gold2))">
-        <div class="nc-icon" style="background:#fffbeb"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="11" x2="15" y2="11"/><line x1="9" y1="15" x2="12" y2="15"/></svg></div>
-        <div class="nc-title">Term & Fees Setup</div><div class="nc-desc">Configure terms and class fee amounts</div>
-        <div class="nc-arrow"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
-      </a>
-      <a href="custom-fees.html" class="nav-card" style="--c-accent:linear-gradient(to right,#8b5cf6,#a78bfa)">
-        <div class="nc-icon" style="background:#faf5ff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></div>
-        <div class="nc-title">Custom Fee Adjustments</div><div class="nc-desc">Sponsorships & special arrangements</div>
-        <div class="nc-arrow"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
-      </a>
-      <a href="payments.html" class="nav-card" style="--c-accent:linear-gradient(to right,#10b981,#34d399)">
-        <div class="nc-icon" style="background:#f0fdf4"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
-        <div class="nc-title">Fee Payments</div><div class="nc-desc">Record & track incoming payments</div>
-        <div class="nc-arrow"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
-      </a>
-      <a href="receipts.html" class="nav-card" style="--c-accent:linear-gradient(to right,#14b8a6,#2dd4bf)">
-        <div class="nc-icon" style="background:#f0fdfa"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></div>
-        <div class="nc-title">Receipts</div><div class="nc-desc">Generate & print payment receipts</div>
-        <div class="nc-arrow"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
-      </a>
-      <a href="sms.html" class="nav-card" style="--c-accent:linear-gradient(to right,#f97316,#fb923c)">
-        <div class="nc-icon" style="background:#fff7ed"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="9" y1="10" x2="15" y2="10"/><line x1="9" y1="13" x2="13" y2="13"/></svg></div>
-        <div class="nc-title">SMS Management</div><div class="nc-desc">Send fee reminders & announcements</div>
-        <div class="nc-arrow"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
-      </a>
-      <a href="fee-reports.html" class="nav-card" style="--c-accent:linear-gradient(to right,#6366f1,#818cf8)">
-        <div class="nc-icon" style="background:#eef2ff"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></svg></div>
-        <div class="nc-title">Fee Reports & Analytics</div><div class="nc-desc">Insights on collection & balances</div>
-        <div class="nc-arrow"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
-      </a>
-      <a href="promotion.html" class="nav-card" style="--c-accent:linear-gradient(to right,#ef4444,#f87171)">
-        <div class="nc-icon" style="background:#fef2f2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg></div>
-        <div class="nc-title">Promotion & Graduation</div><div class="nc-desc">Advance learners to next class</div>
-        <div class="nc-arrow"><svg width="11" height="11" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 8h10M9 4l4 4-4 4"/></svg></div>
-      </a>
     </div>
 
     <!-- ANALYTICS -->
@@ -294,9 +224,31 @@
     return true;
   }
 
-  document.getElementById('heroDate').textContent = new Date().toLocaleDateString('en-KE', {
-    weekday:'long', year:'numeric', month:'long', day:'numeric'
-  });
+  /* ── Time-aware greeting ── */
+  function setGreetingAndDate() {
+    const now  = new Date();
+    const hour = now.getHours();
+    let greeting;
+    if (hour >= 5 && hour < 12)       greeting = 'Good Morning';
+    else if (hour >= 12 && hour < 17)  greeting = 'Good Afternoon';
+    else if (hour >= 17 && hour < 21)  greeting = 'Good Evening';
+    else                               greeting = 'Good Night';
+
+    document.getElementById('heroGreeting').innerHTML =
+      `${greeting}, Admin <span class="hero-wave">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" style="display:inline-block;vertical-align:middle;margin-left:2px;">
+          <rect x="10" y="8" width="4" height="14" rx="2" fill="rgba(201,168,76,0.85)"/>
+          <rect x="15" y="5" width="3.2" height="12" rx="1.6" fill="rgba(201,168,76,0.85)"/>
+          <rect x="19" y="7" width="3.2" height="11" rx="1.6" fill="rgba(201,168,76,0.85)"/>
+          <rect x="6" y="10" width="3.2" height="10" rx="1.6" fill="rgba(201,168,76,0.85)"/>
+          <rect x="22" y="10" width="3" height="8" rx="1.5" fill="rgba(201,168,76,0.85)" transform="rotate(15 22 10)"/>
+        </svg>
+      </span>`;
+
+    document.getElementById('heroDate').textContent = now.toLocaleDateString('en-KE', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
 
   function renderActivityList(activities) {
     const el = document.getElementById('activityList');
@@ -318,7 +270,7 @@
     const lCtx = document.getElementById('lineChart').getContext('2d');
     const lg = lCtx.createLinearGradient(0,0,0,200);
     lg.addColorStop(0,'rgba(15,40,71,0.14)'); lg.addColorStop(1,'rgba(15,40,71,0)');
-    new Chart(lCtx,{type:'line',data:{labels:mL.length?mL:['Jan','Feb','Mar'],datasets:[{data:mV.length?mV:[0,0,0],borderColor:'#0f2847',backgroundColor:lg,borderWidth:2.5,pointBackgroundColor:'#c9a84c',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,tension:0.45,fill:true}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f2847',titleColor:'#c9a84c',bodyColor:'rgba(255,255,255,0.8)',padding:11,cornerRadius:9,callbacks:{label:ctx=>` KES ${ctx.raw.toLocaleString()}`}}},scales:{x:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#94a3b8',font:{size:11},callback:v=>v>=1000?`${(v/1000).toFixed(0)}K`:v}}}}});
+    new Chart(lCtx,{type:'line',data:{labels:mL.length?mL:['—'],datasets:[{data:mV.length?mV:[0],borderColor:'#0f2847',backgroundColor:lg,borderWidth:2.5,pointBackgroundColor:'#c9a84c',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:5,tension:0.45,fill:true}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f2847',titleColor:'#c9a84c',bodyColor:'rgba(255,255,255,0.8)',padding:11,cornerRadius:9,callbacks:{label:ctx=>` KES ${ctx.raw.toLocaleString()}`}}},scales:{x:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:11}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#94a3b8',font:{size:11},callback:v=>v>=1000?`${(v/1000).toFixed(0)}K`:v}}}}});
     const dCtx = document.getElementById('doughnutChart').getContext('2d');
     new Chart(dCtx,{type:'doughnut',data:{labels:['Paid','Partial','Unpaid'],datasets:[{data:[cP||1,cPart||0,cU||0],backgroundColor:['#10b981','#f59e0b','#ef4444'],borderWidth:0,hoverOffset:5}]},options:{cutout:'72%',responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f2847',bodyColor:'rgba(255,255,255,0.85)',padding:9,cornerRadius:7}}}});
     const bCtx = document.getElementById('barChart').getContext('2d');
@@ -335,60 +287,136 @@
 
   async function loadDashboard() {
     if (!await checkAuth()) return;
-    const { data: term } = await supabase.from('terms').select('*').eq('active',true).maybeSingle();
-    const { count: lc } = await supabase.from('learners').select('*',{count:'exact',head:true}).eq('active',true);
+
+    setGreetingAndDate();
+
+    /* ── Quick counts ── */
+    const { data: term } = await supabase.from('terms').select('*').eq('active', true).maybeSingle();
+    const { count: lc }  = await supabase.from('learners').select('*', { count: 'exact', head: true }).eq('active', true);
     document.getElementById('statLearners').textContent = lc?.toLocaleString() ?? '—';
+
     const today = new Date().toISOString().split('T')[0];
-    const { data: tp } = await supabase.from('payments').select('amount').eq('payment_date',today);
-    const tt = (tp||[]).reduce((s,p)=>s+Number(p.amount),0);
-    document.getElementById('statToday').textContent = tt>=1000?`${(tt/1000).toFixed(1)}K`:tt.toLocaleString();
-    const { count: sc } = await supabase.from('sms_history').select('*',{count:'exact',head:true});
+    const { data: tp } = await supabase.from('payments').select('amount').eq('payment_date', today);
+    const tt = (tp || []).reduce((s, p) => s + Number(p.amount), 0);
+    document.getElementById('statToday').textContent = tt >= 1000 ? `${(tt / 1000).toFixed(1)}K` : tt.toLocaleString();
+
+    const { count: sc } = await supabase.from('sms_history').select('*', { count: 'exact', head: true });
     document.getElementById('statSMS').textContent = sc?.toLocaleString() ?? '0';
-    if (!term) { document.getElementById('statOutstanding').textContent='—'; renderActivityList([]); renderCharts([],[],0,0,0,[],[]); renderClassBars([]); return; }
-    const [{ data: fees }, { data: payments }, { data: learners }, { data: classes }] = await Promise.all([
-      supabase.from('fees').select('class_id,amount').eq('term_id',term.id),
-      supabase.from('payments').select('learner_id,amount,payment_date,created_at').eq('term_id',term.id),
-      supabase.from('learners').select('id,class_id,first_name,last_name').eq('active',true),
-      supabase.from('classes').select('id,name,level').order('level')
+
+    if (!term) {
+      document.getElementById('statOutstanding').textContent = '—';
+      renderActivityList([]);
+      renderCharts([], [], 0, 0, 0, [], []);
+      renderClassBars([]);
+      return;
+    }
+
+    /* ── Fetch all data for active term in parallel ── */
+    const [
+      { data: fees },
+      { data: customFees },
+      { data: payments },
+      { data: learners },
+      { data: classes }
+    ] = await Promise.all([
+      supabase.from('fees').select('class_id, amount').eq('term_id', term.id),
+      supabase.from('custom_fees').select('learner_id, custom_amount').eq('term_id', term.id),
+      supabase.from('payments').select('learner_id, amount, payment_date, created_at').eq('term_id', term.id),
+      supabase.from('learners').select('id, class_id, first_name, last_name').eq('active', true),
+      supabase.from('classes').select('id, name, level').order('level')
     ]);
-    const feeMap={}, paidMap={};
-    (fees||[]).forEach(f=>{feeMap[f.class_id]=Number(f.amount);});
-    (payments||[]).forEach(p=>{paidMap[p.learner_id]=(paidMap[p.learner_id]||0)+Number(p.amount);});
-    let tExp=0,tPaid=0,cP=0,cPart=0,cU=0;
-    (learners||[]).forEach(l=>{
-      const fee=feeMap[l.class_id]||0,paid=paidMap[l.id]||0;
-      tExp+=fee; tPaid+=Math.min(paid,fee);
-      if(!fee)return;
-      if(paid>=fee)cP++; else if(paid>0)cPart++; else cU++;
+
+    /* ── Build lookup maps ── */
+    // Standard fee per class
+    const feeMap = {};
+    (fees || []).forEach(f => { feeMap[f.class_id] = Number(f.amount); });
+
+    // Custom fee per learner (overrides class fee when present)
+    const customFeeMap = {};
+    (customFees || []).forEach(cf => { customFeeMap[cf.learner_id] = Number(cf.custom_amount); });
+
+    // Total paid per learner this term
+    const paidMap = {};
+    (payments || []).forEach(p => { paidMap[p.learner_id] = (paidMap[p.learner_id] || 0) + Number(p.amount); });
+
+    /* ── Calculate outstanding, using custom fees where they exist ── */
+    let tExp = 0, tPaid = 0, cP = 0, cPart = 0, cU = 0;
+    (learners || []).forEach(l => {
+      // Use custom fee if set, otherwise fall back to class fee
+      const fee  = (l.id in customFeeMap) ? customFeeMap[l.id] : (feeMap[l.class_id] || 0);
+      const paid = paidMap[l.id] || 0;
+
+      tExp  += fee;
+      // Credit paid up to the expected amount (prevents overpayment inflating "collected")
+      tPaid += Math.min(paid, fee);
+
+      if (!fee) return; // skip learners with no fee assigned
+      if (paid >= fee)     cP++;
+      else if (paid > 0)   cPart++;
+      else                 cU++;
     });
-    const out=Math.max(0,tExp-tPaid);
-    document.getElementById('statOutstanding').textContent=out>=1000?`${(out/1000).toFixed(0)}K`:out.toLocaleString();
-    const pct=tExp>0?Math.round((tPaid/tExp)*100):0;
-    document.getElementById('pctBadge').textContent=`${pct}%`;
-    document.getElementById('pctCenter').textContent=`${pct}%`;
-    const mMap={};
-    (payments||[]).forEach(p=>{const m=p.payment_date?.slice(0,7); if(m) mMap[m]=(mMap[m]||0)+Number(p.amount);});
-    const months=Object.keys(mMap).sort();
-    const mL=months.map(m=>{const[y,mo]=m.split('-');return new Date(+y,+mo-1).toLocaleDateString('en-KE',{month:'short'});});
-    const mV=months.map(m=>mMap[m]);
-    const cpMap={};
-    (payments||[]).forEach(p=>{const l=(learners||[]).find(x=>x.id===p.learner_id); if(l) cpMap[l.class_id]=(cpMap[l.class_id]||0)+Number(p.amount);});
-    const bL=(classes||[]).map(c=>c.name), bV=(classes||[]).map(c=>cpMap[c.id]||0);
-    const classComp=(classes||[]).map(c=>{
-      const cl=(learners||[]).filter(l=>l.class_id===c.id), fee=feeMap[c.id]||0;
-      if(!cl.length||!fee) return {name:c.name,pct:0};
-      const exp=cl.length*fee, paid=cl.reduce((s,l)=>s+Math.min(paidMap[l.id]||0,fee),0);
-      return {name:c.name,pct:Math.round((paid/exp)*100)};
-    }).filter(c=>c.pct>0);
-    const recent=[...(payments||[])].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,7);
-    const activities=recent.map(p=>{
-      const l=(learners||[]).find(x=>x.id===p.learner_id);
-      const name=l?`${l.first_name} ${l.last_name}`:'Unknown';
-      const dt=new Date(p.created_at);
-      return {name,amount:Number(p.amount),time:dt.toLocaleDateString('en-KE',{month:'short',day:'numeric'})+' · '+dt.toLocaleTimeString('en-KE',{hour:'2-digit',minute:'2-digit'})};
+
+    const outstanding = Math.max(0, tExp - tPaid);
+    document.getElementById('statOutstanding').textContent =
+      outstanding >= 1000 ? `${(outstanding / 1000).toFixed(0)}K` : outstanding.toLocaleString();
+
+    const pct = tExp > 0 ? Math.round((tPaid / tExp) * 100) : 0;
+    document.getElementById('pctBadge').textContent  = `${pct}%`;
+    document.getElementById('pctCenter').textContent = `${pct}%`;
+
+    /* ── Monthly trend ── */
+    const mMap = {};
+    (payments || []).forEach(p => {
+      const m = p.payment_date?.slice(0, 7);
+      if (m) mMap[m] = (mMap[m] || 0) + Number(p.amount);
     });
+    const months = Object.keys(mMap).sort();
+    const mL = months.map(m => {
+      const [y, mo] = m.split('-');
+      return new Date(+y, +mo - 1).toLocaleDateString('en-KE', { month: 'short' });
+    });
+    const mV = months.map(m => mMap[m]);
+
+    /* ── Class payment bar chart ── */
+    const cpMap = {};
+    (payments || []).forEach(p => {
+      const l = (learners || []).find(x => x.id === p.learner_id);
+      if (l) cpMap[l.class_id] = (cpMap[l.class_id] || 0) + Number(p.amount);
+    });
+    const bL = (classes || []).map(c => c.name);
+    const bV = (classes || []).map(c => cpMap[c.id] || 0);
+
+    /* ── Class collection rate (also uses custom fees) ── */
+    const classComp = (classes || []).map(c => {
+      const cl  = (learners || []).filter(l => l.class_id === c.id);
+      if (!cl.length) return { name: c.name, pct: 0 };
+      const exp  = cl.reduce((s, l) => s + ((l.id in customFeeMap) ? customFeeMap[l.id] : (feeMap[c.id] || 0)), 0);
+      const paid = cl.reduce((s, l) => {
+        const fee = (l.id in customFeeMap) ? customFeeMap[l.id] : (feeMap[c.id] || 0);
+        return s + Math.min(paidMap[l.id] || 0, fee);
+      }, 0);
+      if (!exp) return { name: c.name, pct: 0 };
+      return { name: c.name, pct: Math.round((paid / exp) * 100) };
+    }).filter(c => c.pct > 0);
+
+    /* ── Recent activity ── */
+    const recent = [...(payments || [])]
+      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+      .slice(0, 7);
+    const activities = recent.map(p => {
+      const l    = (learners || []).find(x => x.id === p.learner_id);
+      const name = l ? `${l.first_name} ${l.last_name}` : 'Unknown';
+      const dt   = new Date(p.created_at);
+      return {
+        name,
+        amount: Number(p.amount),
+        time: dt.toLocaleDateString('en-KE', { month: 'short', day: 'numeric' })
+             + ' · ' + dt.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })
+      };
+    });
+
     renderActivityList(activities);
-    renderCharts(mL,mV,cP,cPart,cU,bL,bV);
+    renderCharts(mL, mV, cP, cPart, cU, bL, bV);
     renderClassBars(classComp);
   }
 
