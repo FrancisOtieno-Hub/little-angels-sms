@@ -1,125 +1,101 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Custom Fees | Little Angels Academy</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <div class="dashboard">
-    <div class="page-header">
-      <h1>Custom Fee Adjustments</h1>
-      <div class="header-actions">
-        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
-        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+<div class="app-shell">
+  <main class="main-content">
+    <div id="alertContainer"></div>
+
+    <div class="page-title-row">
+      <div>
+        <h1 class="page-title">Custom Fee Adjustments</h1>
+        <p class="page-subtitle">Manage sponsorships and special fee arrangements</p>
       </div>
     </div>
-    
-    <div id="alertContainer"></div>
-    
-    <!-- SEARCH LEARNER -->
+
+    <!-- Search learner -->
     <div class="card">
-      <h2>Search Learner for Fee Adjustment</h2>
-      <p class="text-muted mb-20">Start typing to search for a learner - custom fees for sponsored learners or special arrangements</p>
+      <h2>Find Learner</h2>
+      <p class="text-muted mb-20" style="font-size:.85rem;">Search to apply custom fees for sponsored learners or special arrangements</p>
       <div class="autocomplete-container">
-        <input 
-          type="text" 
-          id="searchInput" 
-          class="search-input-large"
-          placeholder="Start typing learner's name or admission number..." 
-          autocomplete="off"
-        />
+        <input type="text" id="searchInput" class="search-input-large" placeholder="Type learner name or admission number…" autocomplete="off"/>
         <div id="autocompleteDropdown" class="autocomplete-dropdown hidden"></div>
       </div>
       <div id="learnerDetails" class="mt-20 hidden"></div>
     </div>
-    
-    <!-- CUSTOM FEE FORM -->
+
+    <!-- Custom fee form -->
     <div class="card hidden" id="customFeeCard">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">Set Custom Fee</h2>
-        <button type="button" id="nextLearnerBtn" class="btn btn-secondary" style="width: auto;">
-          Next Learner →
-        </button>
+      <div class="card-header">
+        <h2>Set Custom Fee</h2>
+        <button type="button" id="nextLearnerBtn" class="btn btn-secondary">Next Learner</button>
       </div>
       <form id="customFeeForm">
-        <div style="background: var(--background); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 16px;">
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-            <div>
-              <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 4px;">Current Class Fee</label>
-              <div id="classFee" style="font-size: 1.3rem; font-weight: 700; color: var(--primary);"></div>
-            </div>
-            <div>
-              <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 4px;">Current Custom Fee</label>
-              <div id="currentCustomFee" style="font-size: 1.3rem; font-weight: 700; color: var(--secondary);"></div>
-            </div>
+        <div style="background:var(--bg);padding:16px;border-radius:var(--radius-xs);margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <div style="font-size:.72rem;color:var(--text-secondary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Class Fee</div>
+            <div id="classFee" style="font-size:1.25rem;font-weight:700;color:var(--text-primary);font-family:'Cormorant Garamond',serif;"></div>
+          </div>
+          <div>
+            <div style="font-size:.72rem;color:var(--text-secondary);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;">Current Custom Fee</div>
+            <div id="currentCustomFee" style="font-size:1.25rem;font-weight:700;color:var(--navy2);font-family:'Cormorant Garamond',serif;"></div>
           </div>
         </div>
-        
-        <label style="display: block; margin-bottom: 8px; font-weight: 600;">Fee Adjustment Type</label>
-        <select id="feeType" required style="margin-bottom: 16px;">
-          <option value="">Select Type</option>
+        <select id="feeType" required>
+          <option value="">Select Adjustment Type</option>
           <option value="full_sponsorship">Full Sponsorship (Free)</option>
           <option value="partial_sponsorship">Partial Sponsorship</option>
           <option value="custom_amount">Custom Amount</option>
-          <option value="remove_custom">Remove Custom Fee (Use Class Fee)</option>
+          <option value="remove_custom">Remove Custom Fee</option>
         </select>
-        
         <div id="customAmountSection" class="hidden">
-          <label style="display: block; margin-bottom: 8px; font-weight: 600;">Custom Fee Amount (KES)</label>
-          <input type="number" id="customAmount" placeholder="Enter amount" min="0" />
+          <input type="number" id="customAmount" placeholder="Custom Fee Amount (KES)" min="0"/>
         </div>
-        
         <div id="reasonSection" class="hidden">
-          <label style="display: block; margin-bottom: 8px; font-weight: 600;">Reason / Notes</label>
-          <textarea 
-            id="feeReason" 
-            placeholder="E.g., Full scholarship from XYZ Foundation, Sibling discount, Staff child, etc." 
-            rows="3"
-            style="width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; resize: vertical;"
-          ></textarea>
+          <textarea id="feeReason" placeholder="Reason / Notes (e.g. Sponsored by XYZ Foundation)" rows="3" style="width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-family:'DM Sans',sans-serif;resize:vertical;outline:none;"></textarea>
         </div>
-        
         <button type="submit" id="saveFeeBtn" class="mt-20">Save Custom Fee</button>
       </form>
     </div>
-    
-    <!-- CUSTOM FEES LIST -->
+
+    <!-- Custom fees list -->
     <div class="card">
-      <h2>Learners with Custom Fees</h2>
-      <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
-        <select id="classFilterCustom" style="width: auto; margin: 0;">
-          <option value="">All Classes</option>
-        </select>
-        <select id="typeFilter" style="width: auto; margin: 0;">
-          <option value="">All Types</option>
-          <option value="full_sponsorship">Full Sponsorship</option>
-          <option value="partial_sponsorship">Partial Sponsorship</option>
-          <option value="custom_amount">Custom Amount</option>
-        </select>
+      <div class="card-header">
+        <h2>Active Custom Fees</h2>
+        <div style="display:flex;gap:10px;">
+          <select id="classFilterCustom" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:.84rem;outline:none;margin-bottom:0;width:auto;"><option value="">All Classes</option></select>
+          <select id="typeFilter" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:.84rem;outline:none;margin-bottom:0;width:auto;">
+            <option value="">All Types</option>
+            <option value="full_sponsorship">Full Sponsorship</option>
+            <option value="partial_sponsorship">Partial Sponsorship</option>
+            <option value="custom_amount">Custom Amount</option>
+          </select>
+        </div>
       </div>
-      <div id="loadingCustomFees" class="text-center text-muted">Loading custom fees...</div>
-      <div id="customFeesTableWrapper" class="hidden" style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
-        <table id="customFeesTable">
-          <thead style="position: sticky; top: 0; background: var(--background); z-index: 10;">
-            <tr>
-              <th>Adm No</th>
-              <th>Name</th>
-              <th>Class</th>
-              <th>Class Fee</th>
-              <th>Custom Fee</th>
-              <th>Type</th>
-              <th>Reason</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div id="loadingCustomFees" class="text-muted text-center">Loading…</div>
+      <div id="customFeesTableWrapper" class="hidden">
+        <div class="table-wrap">
+          <table id="customFeesTable">
+            <thead><tr><th>Adm No</th><th>Name</th><th>Class</th><th>Class Fee</th><th>Custom Fee</th><th>Type</th><th>Reason</th><th>Action</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
-  
-  <script type="module" src="js/custom-fees.js"></script>
+  </main>
+</div>
+<script type="module">
+  import { injectShell } from "./js/sidebar.js";
+  injectShell({ pageTitle: 'Custom Fee Adjustments', activePage: 'custom-fees' });
+</script>
+<script type="module" src="js/custom-fees.js"></script>
 </body>
 </html>
