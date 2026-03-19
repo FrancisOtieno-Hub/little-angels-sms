@@ -1,189 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SMS Management | Little Angels Academy</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .sms-action-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:0; }
+    .sms-action-btn {
+      display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+      padding:18px 20px;border-radius:var(--radius);border:1.5px solid var(--border);
+      background:white;cursor:pointer;transition:all .25s var(--ease);text-align:left;
+    }
+    .sms-action-btn:hover { border-color:var(--navy2);transform:translateY(-2px);box-shadow:var(--shadow); }
+    .sms-action-btn.active { border-color:var(--navy2);background:linear-gradient(135deg,rgba(26,58,92,.04),rgba(26,58,92,.02)); }
+    .sab-icon { width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center; }
+    .sab-title { font-weight:600;font-size:.88rem;color:var(--text-primary); }
+    .sab-desc { font-size:.75rem;color:var(--text-secondary);font-weight:300; }
+    .badge-green { background:#dcfce7;color:#166534;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:600; }
+    @media(max-width:768px){.sms-action-grid{grid-template-columns:1fr;}}
+  </style>
 </head>
 <body>
-  <div class="dashboard">
-    <div class="page-header">
-      <h1>SMS Management</h1>
-      <div class="header-actions">
-        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
-        <button class="btn btn-danger" id="logoutBtn">Logout</button>
-      </div>
-    </div>
-    
+<div class="app-shell">
+  <main class="main-content">
     <div id="alertContainer"></div>
-    
-    <!-- SMS Balance Card -->
-    <div class="card">
-      <h2>SMS Balance</h2>
-      <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
-        <div>
-          <p class="text-muted">Current Balance</p>
-          <h3 id="smsBalance">--</h3>
+
+    <div class="page-title-row">
+      <div>
+        <h1 class="page-title">SMS Management</h1>
+        <p class="page-subtitle">Send fee reminders and announcements to parents</p>
+      </div>
+      <div class="page-actions">
+        <div style="background:white;border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 18px;display:flex;align-items:center;gap:10px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <span style="font-size:.78rem;color:var(--text-secondary);">Balance</span>
+          <span style="font-weight:700;font-size:.92rem;color:var(--text-primary);" id="smsBalance">—</span>
+          <button id="refreshBalanceBtn" style="border:none;background:none;cursor:pointer;color:var(--text-muted);font-size:.75rem;padding:2px 6px;border-radius:4px;transition:.2s;" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background='none'">Refresh</button>
         </div>
-        <button id="refreshBalanceBtn" class="btn btn-secondary">Refresh Balance</button>
       </div>
     </div>
 
     <!-- Quick Actions -->
     <div class="card">
       <h2>Quick Actions</h2>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-        <button id="feeReminderBtn" class="btn btn-primary">Send Fee Reminders</button>
-        <button id="generalMessageBtn" class="btn btn-primary">Send General Message</button>
-        <button id="customMessageBtn" class="btn btn-primary">Send Custom Message</button>
+      <div class="sms-action-grid">
+        <button id="feeReminderBtn" class="sms-action-btn">
+          <div class="sab-icon" style="background:#fef3c7;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div class="sab-title">Fee Reminders</div>
+          <div class="sab-desc">Send balance alerts to parents</div>
+        </button>
+        <button id="generalMessageBtn" class="sms-action-btn">
+          <div class="sab-icon" style="background:#eff6ff;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="sab-title">General Message</div>
+          <div class="sab-desc">Broadcast to all / by class</div>
+        </button>
+        <button id="customMessageBtn" class="sms-action-btn">
+          <div class="sab-icon" style="background:#f0fdf4;"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="sab-title">Custom Numbers</div>
+          <div class="sab-desc">Send to specific phone numbers</div>
+        </button>
       </div>
     </div>
 
-    <!-- Fee Reminder Section -->
+    <!-- Fee Reminder -->
     <div class="card hidden" id="feeReminderSection">
       <h2>Fee Reminder</h2>
-      <p class="text-muted">Send fee balance reminders to parents/guardians</p>
-      
-      <div style="display: grid; gap: 12px; margin-top: 20px;">
-        <select id="feeTermSelect">
-          <option value="">Select Term</option>
-        </select>
-        
-        <select id="feeClassFilter">
-          <option value="">All Classes</option>
-        </select>
-        
-        <select id="feeBalanceFilter">
-          <option value="all">All Learners</option>
-          <option value="with_balance">Only With Balance</option>
-          <option value="overpaid">Only Overpaid</option>
-        </select>
+      <p class="text-muted mb-20" style="font-size:.85rem;">Send outstanding balance reminders to parents/guardians</p>
+      <div style="display:grid;gap:12px;">
+        <select id="feeTermSelect"><option value="">Select Term</option></select>
+        <div class="grid-2">
+          <select id="feeClassFilter"><option value="">All Classes</option></select>
+          <select id="feeBalanceFilter"><option value="all">All Learners</option><option value="with_balance">Only With Balance</option><option value="overpaid">Only Overpaid</option></select>
+        </div>
+        <textarea id="feeReminderTemplate" rows="6" placeholder="Message template — use {{name}}, {{admission_no}}, {{balance}}, {{term}}">Dear parent/guardian of {{name}} ({{admission_no}}),
 
-        <textarea id="feeReminderTemplate" rows="6" placeholder="Message template (use {{name}}, {{admission_no}}, {{balance}}, {{class}})">Dear parent/guardian of {{name}} ({{admission_no}}), 
-
-Your child has a fee balance of KES {{balance}} for {{term}}. 
+Your child has a fee balance of KES {{balance}} for {{term}}.
 
 Please clear the balance at your earliest convenience.
 
 Thank you.
 - Little Angels Academy</textarea>
-
-        <div style="display: flex; gap: 12px;">
-          <button id="previewFeeRecipientsBtn" class="btn btn-primary">Preview Recipients</button>
-          <button id="sendFeeRemindersBtn" class="btn btn-success hidden">Send to All</button>
+        <div style="display:flex;gap:10px;">
+          <button id="previewFeeRecipientsBtn" class="btn btn-secondary">Preview Recipients</button>
+          <button id="sendFeeRemindersBtn" class="btn btn-primary hidden">Send to All</button>
         </div>
-
         <div id="feePreviewContainer" class="hidden">
-          <h3>Recipients Preview (<span id="feeRecipientCount">0</span>)</h3>
-          <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
-            <table id="feeRecipientsTable" style="width: 100%;">
-              <thead>
-                <tr>
-                  <th>Adm No</th>
-                  <th>Name</th>
-                  <th>Class</th>
-                  <th>Phone</th>
-                  <th>Balance</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+          <div style="font-size:.85rem;font-weight:600;margin-bottom:10px;">Recipients Preview (<span id="feeRecipientCount">0</span>)</div>
+          <div class="table-wrap" style="max-height:280px;overflow-y:auto;">
+            <table id="feeRecipientsTable"><thead><tr><th>Adm No</th><th>Name</th><th>Class</th><th>Phone</th><th>Balance</th></tr></thead><tbody></tbody></table>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- General Message Section -->
+    <!-- General Message -->
     <div class="card hidden" id="generalMessageSection">
       <h2>General Message</h2>
-      <p class="text-muted">Send a general message to all or selected parents/guardians</p>
-      
-      <div style="display: grid; gap: 12px; margin-top: 20px;">
-        <select id="generalClassFilter">
-          <option value="">All Classes</option>
-        </select>
-
-        <textarea id="generalMessageText" rows="6" placeholder="Type your message here...">Dear parent/guardian,
+      <div style="display:grid;gap:12px;">
+        <select id="generalClassFilter"><option value="">All Classes</option></select>
+        <textarea id="generalMessageText" rows="5" placeholder="Type your message here…">Dear parent/guardian,
 
 
 
 Thank you.
 - Little Angels Academy</textarea>
-
-        <div style="display: flex; gap: 12px;">
-          <button id="previewGeneralRecipientsBtn" class="btn btn-primary">Preview Recipients</button>
-          <button id="sendGeneralMessageBtn" class="btn btn-success hidden">Send to All</button>
+        <div style="display:flex;gap:10px;">
+          <button id="previewGeneralRecipientsBtn" class="btn btn-secondary">Preview Recipients</button>
+          <button id="sendGeneralMessageBtn" class="btn btn-primary hidden">Send to All</button>
         </div>
-
         <div id="generalPreviewContainer" class="hidden">
-          <h3>Recipients Preview (<span id="generalRecipientCount">0</span>)</h3>
-          <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
-            <table id="generalRecipientsTable" style="width: 100%;">
-              <thead>
-                <tr>
-                  <th>Adm No</th>
-                  <th>Name</th>
-                  <th>Class</th>
-                  <th>Phone</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+          <div style="font-size:.85rem;font-weight:600;margin-bottom:10px;">Recipients (<span id="generalRecipientCount">0</span>)</div>
+          <div class="table-wrap" style="max-height:260px;overflow-y:auto;">
+            <table id="generalRecipientsTable"><thead><tr><th>Adm No</th><th>Name</th><th>Class</th><th>Phone</th></tr></thead><tbody></tbody></table>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Custom Message Section -->
+    <!-- Custom -->
     <div class="card hidden" id="customMessageSection">
       <h2>Custom Message</h2>
-      <p class="text-muted">Send a message to specific phone numbers</p>
-      
-      <div style="display: grid; gap: 12px; margin-top: 20px;">
-        <textarea id="customPhoneNumbers" rows="4" placeholder="Enter phone numbers (one per line or comma-separated)&#10;Example:&#10;0712345678&#10;0723456789"></textarea>
-
-        <textarea id="customMessageText" rows="6" placeholder="Type your message here..."></textarea>
-
-        <div style="display: flex; gap: 12px;">
-          <button id="sendCustomMessageBtn" class="btn btn-success">Send Message</button>
-        </div>
+      <div style="display:grid;gap:12px;">
+        <textarea id="customPhoneNumbers" rows="4" placeholder="Enter phone numbers (one per line or comma-separated)&#10;e.g. 0712345678"></textarea>
+        <textarea id="customMessageText" rows="5" placeholder="Type your message here…"></textarea>
+        <button id="sendCustomMessageBtn" class="btn btn-primary" style="width:fit-content;">Send Message</button>
       </div>
     </div>
 
-    <!-- SMS History -->
+    <!-- History -->
     <div class="card">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">SMS History</h2>
-        <div style="display: flex; gap: 12px;">
-          <select id="historyFilter" style="padding: 8px;">
+      <div class="card-header">
+        <h2>SMS History</h2>
+        <div style="display:flex;gap:10px;">
+          <select id="historyFilter" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:.84rem;outline:none;margin-bottom:0;width:auto;">
             <option value="all">All Messages</option>
             <option value="fee_reminder">Fee Reminders</option>
-            <option value="general">General Messages</option>
-            <option value="custom">Custom Messages</option>
+            <option value="general">General</option>
+            <option value="custom">Custom</option>
           </select>
           <button id="refreshHistoryBtn" class="btn btn-secondary">Refresh</button>
         </div>
       </div>
-
-      <div style="overflow-x: auto;">
+      <div class="table-wrap">
         <table id="smsHistoryTable">
-          <thead>
-            <tr>
-              <th>Date/Time</th>
-              <th>Type</th>
-              <th>Recipients</th>
-              <th>Message Preview</th>
-              <th>Status</th>
-              <th>Sent By</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Date/Time</th><th>Type</th><th>Recipients</th><th>Preview</th><th>Status</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
     </div>
-  </div>
-  
-  <script type="module" src="js/sms.js"></script>
+  </main>
+</div>
+<script type="module">
+  import { injectShell } from "./js/sidebar.js";
+  injectShell({ pageTitle: 'SMS Management', activePage: 'sms' });
+</script>
+<script type="module" src="js/sms.js"></script>
 </body>
 </html>
