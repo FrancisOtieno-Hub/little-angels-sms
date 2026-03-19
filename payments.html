@@ -1,72 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Fee Payments | Little Angels Academy</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <div class="dashboard">
-    <div class="page-header">
-      <h1>Fee Payments</h1>
-      <div class="header-actions">
-        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
-        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+<div class="app-shell">
+  <main class="main-content">
+    <div id="alertContainer"></div>
+
+    <div class="page-title-row">
+      <div>
+        <h1 class="page-title">Fee Payments</h1>
+        <p class="page-subtitle">Record and track incoming fee payments</p>
       </div>
     </div>
-    
-    <div id="alertContainer"></div>
-    
-    <!-- SEARCH LEARNER -->
+
+    <!-- Search -->
     <div class="card">
       <h2>Search Learner</h2>
-      <p class="text-muted mb-20">Start typing to search for a learner</p>
+      <p class="text-muted mb-20" style="font-size:.85rem;">Start typing to search by name or admission number</p>
       <div class="autocomplete-container">
-        <input 
-          type="text" 
-          id="searchInput" 
-          class="search-input-large"
-          placeholder="Start typing learner's name or admission number..." 
-          autocomplete="off"
-        />
+        <input type="text" id="searchInput" class="search-input-large" placeholder="Type learner name or admission number…" autocomplete="off"/>
         <div id="autocompleteDropdown" class="autocomplete-dropdown hidden"></div>
       </div>
       <div id="learnerDetails" class="mt-20 hidden"></div>
     </div>
-    
-    <!-- PAYMENT FORM -->
+
+    <!-- Payment form -->
     <div class="card hidden" id="paymentCard">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">Record Fee Payment</h2>
-        <button type="button" id="nextLearnerBtn" class="btn btn-secondary" style="width: auto;">
-          Next Learner →
-        </button>
+      <div class="card-header">
+        <h2>Record Payment</h2>
+        <button type="button" id="nextLearnerBtn" class="btn btn-secondary">Next Learner</button>
       </div>
       <form id="paymentForm">
-        <input type="date" id="paymentDate" required />
-        <input type="text" id="referenceNo" placeholder="Reference No (optional)" />
-        <input type="number" id="amountPaid" placeholder="Amount Paid (KES)" min="1" required />
+        <div class="grid-2">
+          <div><input type="date" id="paymentDate" required/></div>
+          <div><input type="text" id="referenceNo" placeholder="Reference No (optional)"/></div>
+          <div style="grid-column:1/-1;"><input type="number" id="amountPaid" placeholder="Amount Paid (KES)" min="1" required/></div>
+        </div>
         <button type="submit" id="paymentBtn">Save Payment</button>
       </form>
     </div>
-    
-    <!-- PAYMENT HISTORY -->
+
+    <!-- History -->
     <div class="card hidden" id="historyCard">
       <h2>Payment History</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Ref No</th>
-            <th>Amount (KES)</th>
-          </tr>
-        </thead>
-        <tbody id="paymentHistory"></tbody>
-      </table>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Reference No</th><th>Amount (KES)</th></tr></thead>
+          <tbody id="paymentHistory"></tbody>
+        </table>
+      </div>
     </div>
-  </div>
-  
-  <script type="module" src="js/payments.js"></script>
+  </main>
+</div>
+<script type="module">
+  import { injectShell } from "./js/sidebar.js";
+  injectShell({ pageTitle: 'Fee Payments', activePage: 'payments' });
+</script>
+<script type="module" src="js/payments.js"></script>
 </body>
 </html>
