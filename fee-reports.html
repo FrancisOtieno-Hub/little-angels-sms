@@ -1,120 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Fee Reports | Little Angels Academy</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <div class="dashboard">
-    <div class="page-header">
-      <h1>Fee Reports & Analytics</h1>
-      <div class="header-actions">
-        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
-        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+<div class="app-shell">
+  <main class="main-content">
+    <div id="alertContainer"></div>
+
+    <div class="page-title-row">
+      <div>
+        <h1 class="page-title">Fee Reports & Analytics</h1>
+        <p class="page-subtitle">Collection insights, class summaries and individual learner reports</p>
       </div>
     </div>
-    
-    <div id="alertContainer"></div>
-    
-    <!-- FILTER OPTIONS -->
+
+    <!-- Filters -->
     <div class="card">
       <h2>Report Filters</h2>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+      <div class="grid-3" style="align-items:flex-end;">
         <div>
-          <label style="display: block; margin-bottom: 8px; font-weight: 600;">Select Class</label>
-          <select id="classFilter" style="margin: 0;">
-            <option value="">All Classes</option>
-          </select>
+          <label class="form-label">Class</label>
+          <select id="classFilter" style="margin-bottom:0;"><option value="">All Classes</option></select>
         </div>
         <div>
-          <label style="display: block; margin-bottom: 8px; font-weight: 600;">Payment Status</label>
-          <select id="statusFilter" style="margin: 0;">
+          <label class="form-label">Payment Status</label>
+          <select id="statusFilter" style="margin-bottom:0;">
             <option value="">All Status</option>
             <option value="paid">Fully Paid</option>
             <option value="partial">Partially Paid</option>
             <option value="unpaid">Not Paid</option>
           </select>
         </div>
-        <div style="display: flex; align-items: flex-end;">
-          <button id="generateReportBtn" class="btn btn-primary" style="width: 100%;">
-            📊 Generate Report
+        <div>
+          <button id="generateReportBtn" class="btn btn-primary" style="width:100%;justify-content:center;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></svg>
+            Generate Report
           </button>
         </div>
       </div>
     </div>
-    
-    <!-- SUMMARY CARDS -->
-    <div id="summaryCards" class="hidden" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;"></div>
-    
-    <!-- CLASS SUMMARY -->
+
+    <!-- Summary cards -->
+    <div id="summaryCards" class="hidden grid-4" style="margin-bottom:24px;"></div>
+
+    <!-- Class summary -->
     <div class="card hidden" id="classSummaryCard">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">Summary by Class</h2>
-        <div style="display: flex; gap: 8px;">
-          <button id="exportClassSummaryBtn" class="btn btn-primary" style="width: auto;">
-            📄 Export to PDF
-          </button>
-          <button id="exportClassSummaryXlsxBtn" class="btn btn-primary" style="width: auto;">
-            📊 Export to Excel
-          </button>
+      <div class="card-header">
+        <h2>Summary by Class</h2>
+        <div style="display:flex;gap:8px;">
+          <button id="exportClassSummaryBtn" class="btn btn-secondary">PDF</button>
+          <button id="exportClassSummaryXlsxBtn" class="btn btn-secondary">Excel</button>
         </div>
       </div>
-      <div style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+      <div class="table-wrap" style="max-height:380px;overflow-y:auto;">
         <table id="classSummaryTable">
-          <thead style="position: sticky; top: 0; background: var(--background); z-index: 10;">
-            <tr>
-              <th>Class</th>
-              <th>Total Learners</th>
-              <th>Expected Fees</th>
-              <th>Total Paid</th>
-              <th>Balance</th>
-              <th>% Collected</th>
-            </tr>
-          </thead>
+          <thead style="position:sticky;top:0;background:var(--bg);z-index:10;"><tr><th>Class</th><th>Learners</th><th>Expected</th><th>Collected</th><th>Balance</th><th>% Collected</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
     </div>
-    
-    <!-- INDIVIDUAL LEARNERS REPORT -->
+
+    <!-- Individual -->
     <div class="card hidden" id="learnersReportCard">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0;">Individual Learner Payments</h2>
-        <div style="display: flex; gap: 8px;">
-          <button id="exportLearnersBtn" class="btn btn-primary" style="width: auto;">
-            📄 Export to PDF
-          </button>
-          <button id="exportLearnersXlsxBtn" class="btn btn-primary" style="width: auto;">
-            📊 Export to Excel
-          </button>
+      <div class="card-header">
+        <h2>Individual Learner Payments</h2>
+        <div style="display:flex;gap:8px;">
+          <button id="exportLearnersBtn" class="btn btn-secondary">PDF</button>
+          <button id="exportLearnersXlsxBtn" class="btn btn-secondary">Excel</button>
         </div>
       </div>
-      <div id="loadingReport" class="text-center text-muted">Loading report...</div>
-      <div id="reportTableWrapper" class="hidden" style="max-height: 500px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
-        <table id="learnersReportTable">
-          <thead style="position: sticky; top: 0; background: var(--background); z-index: 10;">
-            <tr>
-              <th>Adm No</th>
-              <th>Name</th>
-              <th>Class</th>
-              <th>Total Fees</th>
-              <th>Amount Paid</th>
-              <th>Balance</th>
-              <th>Payment Dates</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+      <div id="loadingReport" class="text-muted text-center">Loading report…</div>
+      <div id="reportTableWrapper" class="hidden">
+        <div class="table-wrap" style="max-height:460px;overflow-y:auto;">
+          <table id="learnersReportTable">
+            <thead style="position:sticky;top:0;background:var(--bg);z-index:10;"><tr><th>Adm No</th><th>Name</th><th>Class</th><th>Total Fees</th><th>Amount Paid</th><th>Balance</th><th>Payment Dates</th><th>Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </div>
-  </div>
-  
-  <script type="module" src="js/fee-reports.js"></script>
+  </main>
+</div>
+<script type="module">
+  import { injectShell } from "./js/sidebar.js";
+  injectShell({ pageTitle: 'Fee Reports', activePage: 'fee-reports' });
+</script>
+<script type="module" src="js/fee-reports.js"></script>
 </body>
 </html>
