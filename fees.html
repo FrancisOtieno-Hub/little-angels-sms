@@ -1,63 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Term & Fees Setup | Little Angels Academy</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Term & Fees | Little Angels Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <div class="dashboard">
-    <div class="page-header">
-      <h1>Term & Fees Setup</h1>
-      <div class="header-actions">
-        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
-        <button class="btn btn-danger" id="logoutBtn">Logout</button>
+<div class="app-shell">
+  <main class="main-content">
+    <div id="alertContainer"></div>
+
+    <div class="page-title-row">
+      <div>
+        <h1 class="page-title">Term & Fees Setup</h1>
+        <p class="page-subtitle">Configure academic terms and set fees per class</p>
       </div>
     </div>
-    
-    <div id="alertContainer"></div>
-    
-    <!-- TERM MANAGEMENT -->
-    <div class="card">
-      <h2>Academic Term Management</h2>
-      <p id="activeTerm" class="text-muted mb-20">Loading active term...</p>
-      <form id="termForm">
-        <input type="number" id="year" placeholder="Year (e.g. 2026)" min="2020" max="2050" required />
-        <select id="term" required>
-          <option value="">Select Term</option>
-          <option value="1">Term 1</option>
-          <option value="2">Term 2</option>
-          <option value="3">Term 3</option>
-        </select>
-        <button type="submit" id="termBtn">Set Active Term</button>
-      </form>
+
+    <div class="grid-2">
+      <!-- Term Management -->
+      <div class="card">
+        <h2>Academic Term</h2>
+        <p id="activeTerm" class="text-muted mb-20" style="font-size:.85rem;">Loading active term…</p>
+        <form id="termForm">
+          <input type="number" id="year" placeholder="Year (e.g. 2026)" min="2020" max="2050" required/>
+          <select id="term" required>
+            <option value="">Select Term</option>
+            <option value="1">Term 1</option>
+            <option value="2">Term 2</option>
+            <option value="3">Term 3</option>
+          </select>
+          <button type="submit" id="termBtn">Set Active Term</button>
+        </form>
+      </div>
+
+      <!-- Fees per class -->
+      <div class="card">
+        <h2>Fees Per Class</h2>
+        <form id="feesForm">
+          <select id="feesClass" required><option value="">Select Class</option></select>
+          <input type="number" id="feesAmount" placeholder="Fee Amount (KES)" min="0" required/>
+          <button type="submit" id="feesBtn">Save / Update Fees</button>
+        </form>
+      </div>
     </div>
-    
-    <!-- FEES SETUP -->
+
+    <!-- Fees table -->
     <div class="card">
-      <h2>Fees Per Class</h2>
-      <form id="feesForm">
-        <select id="feesClass" required>
-          <option value="">Select Class</option>
-        </select>
-        <input type="number" id="feesAmount" placeholder="Fees Amount (KES)" min="0" required />
-        <button type="submit" id="feesBtn">Save / Update Fees</button>
-      </form>
-      
-      <div id="loadingFees" class="text-center text-muted mt-20">Loading fees...</div>
-      <table class="mt-20 hidden" id="feesTableContainer">
-        <thead>
-          <tr>
-            <th>Class</th>
-            <th>Fees (KES)</th>
-          </tr>
-        </thead>
-        <tbody id="feesTable"></tbody>
-      </table>
+      <h2>Current Term Fees</h2>
+      <div id="loadingFees" class="text-muted text-center">Loading fees…</div>
+      <div id="feesTableContainer" class="hidden">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Class</th><th>Fees (KES)</th></tr></thead>
+            <tbody id="feesTable"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
-  
-  <script type="module" src="js/fees.js"></script>
+  </main>
+</div>
+<script type="module">
+  import { injectShell } from "./js/sidebar.js";
+  injectShell({ pageTitle: 'Term & Fees Setup', activePage: 'fees' });
+</script>
+<script type="module" src="js/fees.js"></script>
 </body>
 </html>
