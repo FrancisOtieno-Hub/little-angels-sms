@@ -1,53 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Promotion & Graduation | Little Angels Academy</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Promotion | Little Angels Academy</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <div class="dashboard">
-    <div class="page-header">
-      <h1>Promotion & Graduation</h1>
-      <div class="header-actions">
-        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
-        <button class="btn btn-danger" id="logoutBtn">Logout</button>
-      </div>
-    </div>
-    
+<div class="app-shell">
+  <main class="main-content">
     <div id="alertContainer"></div>
-    
-    <div class="card">
-      <h2>Promote Learners to Next Class</h2>
-      <p class="text-muted mb-20">
-        ⚠️ <strong>Warning:</strong> This action will promote all active learners in the selected class. 
-        Grade 9 learners will be marked as graduated. This cannot be undone.
-      </p>
-      <select id="fromClass">
-        <option value="">Select Current Class</option>
-      </select>
-      <div style="display: flex; gap: 12px; margin-top: 16px;">
-        <button id="previewBtn" class="btn btn-primary">Preview Learners</button>
-        <button id="promoteBtn" class="btn btn-primary hidden">Promote Learners</button>
+
+    <div class="page-title-row">
+      <div>
+        <h1 class="page-title">Promotion & Graduation</h1>
+        <p class="page-subtitle">Advance learners to the next class or mark graduates</p>
       </div>
-      
-      <div id="loadingPreview" class="text-center text-muted mt-20 hidden">Loading learners...</div>
-      
-      <table class="mt-20 hidden" id="previewTable">
-        <thead>
-          <tr>
-            <th>Adm No</th>
-            <th>Name</th>
-            <th>Current Class</th>
-            <th>Next Status</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
     </div>
-  </div>
-  
-  <script type="module" src="js/promotion.js"></script>
+
+    <div class="card">
+      <h2>Promote Learners</h2>
+      <div class="alert alert-warning" style="margin-bottom:20px;">
+        <strong>Warning:</strong> This will promote all active learners in the selected class. Grade 9 learners will be marked as graduated. This cannot be undone.
+      </div>
+      <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+        <div style="flex:1;min-width:200px;">
+          <label class="form-label">Current Class</label>
+          <select id="fromClass" style="margin-bottom:0;"><option value="">Select Class</option></select>
+        </div>
+        <button id="previewBtn" class="btn btn-secondary">Preview Learners</button>
+        <button id="promoteBtn" class="btn btn-primary hidden">Promote All</button>
+      </div>
+
+      <div id="loadingPreview" class="text-muted text-center mt-20 hidden">Loading learners…</div>
+
+      <div id="previewTableWrap" class="hidden mt-20">
+        <div class="table-wrap">
+          <table id="previewTable">
+            <thead><tr><th>Adm No</th><th>Name</th><th>Current Class</th><th>Next Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script type="module">
+  import { injectShell } from "./js/sidebar.js";
+  injectShell({ pageTitle: 'Promotion & Graduation', activePage: 'promotion' });
+</script>
+<script type="module" src="js/promotion.js"></script>
 </body>
 </html>
