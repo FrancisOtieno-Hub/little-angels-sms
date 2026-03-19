@@ -88,7 +88,7 @@ previewBtn.addEventListener("click", async () => {
   setLoading(previewBtn, true, "Preview Learners");
   tbody.innerHTML = "";
   learnersToPromote = [];
-  table.classList.add("hidden");
+  document.getElementById("previewTableWrap").classList.add("hidden");
   loadingPreview.classList.remove("hidden");
   promoteBtn.classList.add("hidden");
   
@@ -146,7 +146,7 @@ previewBtn.addEventListener("click", async () => {
     });
     
     loadingPreview.classList.add("hidden");
-    table.classList.remove("hidden");
+    document.getElementById("previewTableWrap").classList.remove("hidden");
     promoteBtn.classList.remove("hidden");
     
     showAlert(`${learners.length} learner(s) ready for promotion`, "info");
@@ -208,7 +208,7 @@ promoteBtn.addEventListener("click", async () => {
     }
     
     // Reset UI
-    table.classList.add("hidden");
+    document.getElementById("previewTableWrap").classList.add("hidden");
     promoteBtn.classList.add("hidden");
     fromClass.value = "";
     learnersToPromote = [];
