@@ -1,128 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Receipts | Little Angels Academy</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css"/>
 </head>
 <body>
-  <div class="dashboard no-print">
-    <div class="page-header">
-      <h1>Receipt Generator</h1>
-      <div class="header-actions">
-        <a href="dashboard.html" class="btn btn-secondary">← Back to Dashboard</a>
-        <button class="btn btn-danger" id="logoutBtn">Logout</button>
-      </div>
-    </div>
-    
+<div class="app-shell">
+  <div class="main-content no-print">
     <div id="alertContainer"></div>
 
-    <!-- ===================== -->
-    <!-- PERIOD FILTER CARD    -->
-    <!-- ===================== -->
+    <div class="page-title-row">
+      <div>
+        <h1 class="page-title">Receipt Generator</h1>
+        <p class="page-subtitle">Generate and print A4 fee payment receipts</p>
+      </div>
+    </div>
+
+    <!-- Period filter -->
     <div class="card">
       <h2>Print Receipts by Period</h2>
-      <p class="text-muted mb-20">Select a period to fetch all learners who made payments within that range</p>
-
-      <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;">
+      <p class="text-muted mb-20" style="font-size:.85rem;">Select a period to fetch all learners who made payments in that range</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;">
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 6px;">Period</label>
-          <select id="periodSelect" style="padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem; min-width: 180px;">
+          <label class="form-label">Period</label>
+          <select id="periodSelect" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:.88rem;outline:none;margin-bottom:0;min-width:180px;">
             <option value="">-- Select Period --</option>
             <option value="this_month">This Month</option>
             <option value="last_month">Last Month</option>
             <option value="custom">Custom Date Range</option>
           </select>
         </div>
-
-        <div id="customDateRange" style="display: none; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
-          <div>
-            <label style="display: block; font-weight: 600; margin-bottom: 6px;">From</label>
-            <input type="date" id="dateFrom" style="padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem;" />
-          </div>
-          <div>
-            <label style="display: block; font-weight: 600; margin-bottom: 6px;">To</label>
-            <input type="date" id="dateTo" style="padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.95rem;" />
-          </div>
+        <div id="customDateRange" style="display:none;gap:12px;align-items:flex-end;flex-wrap:wrap;">
+          <div><label class="form-label">From</label><input type="date" id="dateFrom" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:.88rem;outline:none;margin-bottom:0;"/></div>
+          <div><label class="form-label">To</label><input type="date" id="dateTo" style="padding:9px 14px;border:1.5px solid var(--border);border-radius:var(--radius-xs);font-size:.88rem;outline:none;margin-bottom:0;"/></div>
         </div>
-
-        <button id="fetchByPeriodBtn" class="btn btn-primary" style="height: fit-content;">Fetch Learners</button>
+        <button id="fetchByPeriodBtn" class="btn btn-primary">Fetch Learners</button>
       </div>
     </div>
 
-    <!-- ========================= -->
-    <!-- PERIOD RESULTS CARD       -->
-    <!-- ========================= -->
+    <!-- Period results -->
     <div class="card hidden" id="periodResultsCard">
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+      <div class="card-header">
         <div>
-          <h2 style="margin-bottom: 4px;">Learners with Payments</h2>
-          <p class="text-muted" id="periodResultsSubtitle"></p>
+          <h2>Learners with Payments</h2>
+          <p class="text-muted" id="periodResultsSubtitle" style="font-size:.82rem;margin-top:2px;"></p>
         </div>
-        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0;">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
           <button id="printAllBtn" class="btn btn-primary">Print All Receipts</button>
-          <span id="periodResultsCount" class="text-muted" style="font-size: 0.85rem;"></span>
+          <span id="periodResultsCount" class="text-muted" style="font-size:.78rem;"></span>
         </div>
       </div>
-
-      <div id="periodLearnersList" style="margin-top: 12px;"></div>
+      <div id="periodLearnersList" style="margin-top:8px;"></div>
     </div>
 
-    <!-- ===================== -->
-    <!-- EXISTING SEARCH CARD  -->
-    <!-- ===================== -->
+    <!-- Individual search -->
     <div class="card">
-      <h2>Search Learner</h2>
-      <p class="text-muted mb-20">Start typing to search for a learner</p>
+      <h2>Individual Learner Receipt</h2>
+      <p class="text-muted mb-20" style="font-size:.85rem;">Search to generate a receipt for specific payments</p>
       <div class="autocomplete-container">
-        <input 
-          type="text" 
-          id="receiptSearch" 
-          class="search-input-large"
-          placeholder="Start typing learner's name or admission number..." 
-          autocomplete="off"
-        />
+        <input type="text" id="receiptSearch" class="search-input-large" placeholder="Type learner name or admission number…" autocomplete="off"/>
         <div id="autocompleteDropdown" class="autocomplete-dropdown hidden"></div>
       </div>
     </div>
-    
-    <!-- PAYMENT SELECTION -->
+
+    <!-- Payment selection -->
     <div class="card hidden" id="paymentSelectionCard">
-      <h2>Select Payments to Include in Receipt</h2>
-      <p class="text-muted mb-20">Check the payments you want to include in the cumulative receipt</p>
-      
+      <h2>Select Payments</h2>
+      <p class="text-muted mb-20" style="font-size:.85rem;">Choose which payments to include in the receipt</p>
       <div id="learnerInfo" class="mb-20"></div>
-      
-      <div style="background: var(--background); padding: 16px; border-radius: var(--radius-sm); margin-bottom: 20px;">
-        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-          <input type="checkbox" id="selectAllPayments" style="width: 20px; height: 20px; cursor: pointer;">
-          <span style="font-weight: 600; font-size: 1rem;">Select All Payments</span>
+      <div style="background:var(--bg);padding:14px;border-radius:var(--radius-xs);margin-bottom:16px;">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+          <input type="checkbox" id="selectAllPayments" style="width:17px;height:17px;cursor:pointer;accent-color:var(--navy2);">
+          <span style="font-weight:600;font-size:.9rem;">Select All Payments</span>
         </label>
       </div>
-      
-      <div id="paymentsListContainer" style="max-height: 300px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+      <div style="max-height:280px;overflow-y:auto;" class="table-wrap">
         <table id="paymentsTable">
-          <thead style="position: sticky; top: 0; background: var(--background); z-index: 10;">
-            <tr>
-              <th style="width: 60px;">Select</th>
-              <th>Payment Date</th>
-              <th>Amount (KES)</th>
-            </tr>
+          <thead style="position:sticky;top:0;background:var(--bg);z-index:10;">
+            <tr><th style="width:56px;">Select</th><th>Payment Date</th><th>Amount (KES)</th></tr>
           </thead>
           <tbody></tbody>
         </table>
       </div>
-      
-      <div style="margin-top: 20px; display: flex; gap: 12px; align-items: center;">
-        <button id="generateReceiptBtn" class="btn btn-primary">Generate Receipt</button>
-        <span id="selectionCount" class="text-muted"></span>
+      <div style="margin-top:18px;display:flex;gap:12px;align-items:center;">
+        <button id="generateReceiptBtn" class="btn btn-primary">Generate & Print Receipt</button>
+        <span id="selectionCount" class="text-muted" style="font-size:.82rem;"></span>
       </div>
     </div>
   </div>
-  
+
+  <!-- Print area -->
   <div id="receiptContainer" class="receipt-container hidden"></div>
-  
-  <script type="module" src="js/receipts.js"></script>
+</div>
+
+<script type="module">
+  import { injectShell } from "./js/sidebar.js";
+  injectShell({ pageTitle: 'Receipts', activePage: 'receipts' });
+</script>
+<script type="module" src="js/receipts.js"></script>
 </body>
 </html>
