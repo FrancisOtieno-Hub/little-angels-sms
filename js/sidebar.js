@@ -1,4 +1,6 @@
 /* sidebar.js — injects the persistent sidebar + topbar into every page */
+import { SCHOOL } from './school-config.js';
+
 export function injectShell({ pageTitle = '', activePage = '' } = {}) {
 
   const pages = [
@@ -102,8 +104,8 @@ export function injectShell({ pageTitle = '', activePage = '' } = {}) {
           </svg>
         </div>
         <div class="sidebar-brand-text">
-          <div class="sidebar-school-name">Little Angels</div>
-          <div class="sidebar-tagline">Academy · Thika</div>
+          <div class="sidebar-school-name">${SCHOOL.shortName}</div>
+          <div class="sidebar-tagline">${SCHOOL.tagline}</div>
         </div>
       </div>
 
@@ -115,7 +117,7 @@ export function injectShell({ pageTitle = '', activePage = '' } = {}) {
 
       <div class="sidebar-footer">
         <div class="sidebar-signature">
-          Empowering education through<br>intelligent systems — <span>ScoTech</span>
+          Empowering education through<br>intelligent systems — <span>${SCHOOL.signedBy}</span>
         </div>
       </div>
     </aside>
