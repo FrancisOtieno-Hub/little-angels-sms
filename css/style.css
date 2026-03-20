@@ -105,10 +105,14 @@ a { text-decoration: none; color: inherit; }
   background: var(--navy);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden;          /* horizontal hidden to prevent brand text overflow */
+  overflow-y: auto;          /* vertical scroll if content taller than viewport */
   z-index: 200;
   transition: width 0.3s var(--ease);
+  scrollbar-width: none;     /* hide scrollbar on the sidebar itself */
 }
+
+.sidebar::-webkit-scrollbar { display: none; }
 
 /* Subtle inner texture */
 .sidebar::before {
@@ -279,6 +283,7 @@ a { text-decoration: none; color: inherit; }
   padding: 14px 12px;
   border-top: 1px solid rgba(255,255,255,0.07);
   flex-shrink: 0;
+  margin-top: auto;          /* push to bottom even if nav items are few */
 }
 
 .sidebar-signature {
