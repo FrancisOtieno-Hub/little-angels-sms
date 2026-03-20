@@ -296,20 +296,35 @@
       margin-bottom: 8px;
     }
 
+    /* Wrapper is the positioning context for icon + toggle */
     .field-wrap {
       position: relative;
+      display: flex;
+      align-items: center;
     }
 
+    /* Icon: flex-centered inside the wrapper, not absolutely-positioned */
     .field-icon {
       position: absolute;
-      left: 16px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 16px;
-      height: 16px;
-      opacity: 0.45;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 46px;               /* touch target width */
+      display: flex;
+      align-items: center;
+      justify-content: center;
       pointer-events: none;
+      opacity: 0.45;
       transition: opacity 0.25s;
+      flex-shrink: 0;
+    }
+
+    /* The actual SVG inside the icon wrapper */
+    .field-icon svg {
+      display: block;            /* removes inline descender gap */
+      width: 15px;
+      height: 15px;
+      flex-shrink: 0;
     }
 
     .field-wrap:focus-within .field-icon {
@@ -318,22 +333,33 @@
 
     .field-input {
       width: 100%;
-      padding: 14px 16px 14px 44px;
+      padding: 0 16px 0 46px;    /* vertical padding handled by height */
+      height: 48px;              /* fixed height = perfectly centred text */
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.12);
       border-radius: 12px;
       color: var(--text-light);
       font-family: 'DM Sans', sans-serif;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
       font-weight: 300;
       letter-spacing: 0.02em;
+      line-height: 1;            /* prevents browser line-height shifting text */
       outline: none;
       transition: all 0.3s ease;
       -webkit-appearance: none;
+      box-sizing: border-box;
     }
 
     .field-input::placeholder {
       color: rgba(255,255,255,0.28);
+      font-size: 0.9rem;
+      font-weight: 300;
+      line-height: 1;
+    }
+
+    /* Password field needs extra right-padding for the eye toggle */
+    #password.field-input {
+      padding-right: 46px;
     }
 
     .field-input:focus {
@@ -344,21 +370,32 @@
         inset 0 1px 0 rgba(255,255,255,0.06);
     }
 
-    /* Password toggle */
+    /* Password toggle — mirror the icon approach on the right side */
     .pwd-toggle {
       position: absolute;
-      right: 14px;
-      top: 50%;
-      transform: translateY(-50%);
+      right: 0;
+      top: 0;
+      bottom: 0;
+      width: 46px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: none;
       border: none;
       cursor: pointer;
       opacity: 0.35;
       transition: opacity 0.2s;
-      padding: 4px;
-      line-height: 1;
+      padding: 0;
       color: white;
     }
+
+    .pwd-toggle svg {
+      display: block;            /* removes inline descender gap */
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
     .pwd-toggle:hover { opacity: 0.7; }
 
     /* ──────────────────────────────────────────────
@@ -375,22 +412,58 @@
     .remember {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 9px;
       cursor: pointer;
+      user-select: none;
     }
 
+    /* Custom checkbox — replaces inconsistent native rendering */
     .remember input[type="checkbox"] {
-      width: 15px;
-      height: 15px;
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      min-width: 16px;           /* prevents flex squishing */
       border-radius: 4px;
-      accent-color: var(--gold);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.06);
       cursor: pointer;
+      position: relative;
+      flex-shrink: 0;
+      transition: all 0.2s ease;
+      margin: 0;                 /* reset any browser margin */
+      vertical-align: middle;
+    }
+
+    .remember input[type="checkbox"]:checked {
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+
+    /* Checkmark tick */
+    .remember input[type="checkbox"]:checked::after {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 1.5px;
+      width: 5px;
+      height: 9px;
+      border: 2px solid #0f2847;
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg);
+    }
+
+    .remember input[type="checkbox"]:focus-visible {
+      outline: 2px solid rgba(201,168,76,0.6);
+      outline-offset: 2px;
     }
 
     .remember span {
       font-size: 0.8rem;
       color: var(--text-dim);
       letter-spacing: 0.02em;
+      line-height: 1;
     }
 
     .forgot {
@@ -399,6 +472,7 @@
       text-decoration: none;
       letter-spacing: 0.02em;
       transition: color 0.2s;
+      line-height: 1;
     }
     .forgot:hover { color: var(--gold2); }
 
@@ -596,10 +670,12 @@
         <div class="form-group">
           <label class="field-label" for="email">Email Address</label>
           <div class="field-wrap">
-            <svg class="field-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4z" stroke="white" stroke-width="1.2"/>
-              <path d="M1 4l7 5 7-5" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-            </svg>
+            <div class="field-icon">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M1 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V4z" stroke="white" stroke-width="1.2"/>
+                <path d="M1 4l7 5 7-5" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+            </div>
             <input
               type="email"
               id="email"
@@ -614,11 +690,13 @@
         <div class="form-group">
           <label class="field-label" for="password">Password</label>
           <div class="field-wrap">
-            <svg class="field-icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="2" y="7" width="12" height="8" rx="2" stroke="white" stroke-width="1.2"/>
-              <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
-              <circle cx="8" cy="11" r="1.2" fill="white"/>
-            </svg>
+            <div class="field-icon">
+              <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="2" y="7" width="12" height="8" rx="2" stroke="white" stroke-width="1.2"/>
+                <path d="M5 7V5a3 3 0 0 1 6 0v2" stroke="white" stroke-width="1.2" stroke-linecap="round"/>
+                <circle cx="8" cy="11" r="1.2" fill="white"/>
+              </svg>
+            </div>
             <input
               type="password"
               id="password"
@@ -628,7 +706,7 @@
               required
             />
             <button type="button" class="pwd-toggle" id="pwdToggle" aria-label="Toggle password visibility">
-              <svg id="eyeIcon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <svg id="eyeIcon" viewBox="0 0 16 16" fill="none">
                 <ellipse cx="8" cy="8" rx="6" ry="4" stroke="white" stroke-width="1.2"/>
                 <circle cx="8" cy="8" r="1.8" fill="white"/>
               </svg>
