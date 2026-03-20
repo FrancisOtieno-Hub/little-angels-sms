@@ -119,16 +119,6 @@
       <div class="hero-left">
         <div class="hero-eyebrow">Dashboard Overview</div>
         <h1 class="hero-heading" id="heroGreeting"></h1>
-          <span class="hero-wave">
-            <svg width="28" height="28" viewBox="0 0 32 32" fill="none" style="display:inline-block;vertical-align:middle;margin-left:2px;">
-              <rect x="10" y="8" width="4" height="14" rx="2" fill="rgba(201,168,76,0.85)"/>
-              <rect x="15" y="5" width="3.2" height="12" rx="1.6" fill="rgba(201,168,76,0.85)"/>
-              <rect x="19" y="7" width="3.2" height="11" rx="1.6" fill="rgba(201,168,76,0.85)"/>
-              <rect x="6" y="10" width="3.2" height="10" rx="1.6" fill="rgba(201,168,76,0.85)"/>
-              <rect x="22" y="10" width="3" height="8" rx="1.5" fill="rgba(201,168,76,0.85)" transform="rotate(15 22 10)"/>
-            </svg>
-          </span>
-        </h1>
         <p class="hero-sub">Here's what's happening at Little Angels Academy today. Everything looks on track.</p>
         <div class="hero-date">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -200,12 +190,12 @@
         <div id="activityList"><div style="text-align:center;padding:20px;color:var(--text-muted);font-size:.84rem;">Loading…</div></div>
       </div>
       <div class="bar-wrap">
-        <div class="chart-head"><div><div class="chart-name">Class Payments</div><div class="chart-sub">By collection amount</div></div></div>
-        <canvas id="barChart" height="200"></canvas>
+        <div class="chart-head"><div><div class="chart-name">Class Payments</div><div class="chart-sub">Collection by class</div></div></div>
+        <canvas id="barChart" height="240"></canvas>
       </div>
       <div class="rate-wrap">
         <div class="sec-hd" style="margin-bottom:14px;"><h2 class="sec-title" style="font-size:1rem;">Collection Rate</h2><span class="sec-link">by class</span></div>
-        <div id="classBars"><div style="text-align:center;padding:20px;color:var(--text-muted);font-size:.84rem;">Loading…</div></div>
+        <div id="classBars" style="max-height:280px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;"></div>
       </div>
     </div>
 
@@ -228,26 +218,85 @@
   function setGreetingAndDate() {
     const now  = new Date();
     const hour = now.getHours();
-    let greeting;
-    if (hour >= 5 && hour < 12)       greeting = 'Good Morning';
-    else if (hour >= 12 && hour < 17)  greeting = 'Good Afternoon';
-    else if (hour >= 17 && hour < 21)  greeting = 'Good Evening';
-    else                               greeting = 'Good Night';
 
-    document.getElementById('heroGreeting').innerHTML =
-      `${greeting}, Admin <span class="hero-wave">
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" style="display:inline-block;vertical-align:middle;margin-left:2px;">
-          <rect x="10" y="8" width="4" height="14" rx="2" fill="rgba(201,168,76,0.85)"/>
-          <rect x="15" y="5" width="3.2" height="12" rx="1.6" fill="rgba(201,168,76,0.85)"/>
-          <rect x="19" y="7" width="3.2" height="11" rx="1.6" fill="rgba(201,168,76,0.85)"/>
-          <rect x="6" y="10" width="3.2" height="10" rx="1.6" fill="rgba(201,168,76,0.85)"/>
-          <rect x="22" y="10" width="3" height="8" rx="1.5" fill="rgba(201,168,76,0.85)" transform="rotate(15 22 10)"/>
-        </svg>
-      </span>`;
+    // Greeting text + a universally recognised contextual SVG icon
+    let greeting, iconSvg;
+
+    if (hour >= 5 && hour < 12) {
+      greeting = 'Good Morning';
+      // Sun rising — universally recognised morning symbol
+      iconSvg = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none"
+        style="display:inline-block;vertical-align:middle;margin-left:6px;"
+        stroke="rgba(232,201,106,0.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <line x1="12" y1="2"  x2="12" y2="4"/>
+        <line x1="12" y1="20" x2="12" y2="22"/>
+        <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="2"  y1="12" x2="4"  y2="12"/>
+        <line x1="20" y1="12" x2="22" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>`;
+    } else if (hour >= 12 && hour < 17) {
+      greeting = 'Good Afternoon';
+      // Bold midday sun — full rays
+      iconSvg = `<svg width="30" height="30" viewBox="0 0 24 24" fill="none"
+        style="display:inline-block;vertical-align:middle;margin-left:6px;"
+        stroke="rgba(232,201,106,0.95)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1"  x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22"  x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1"  y1="12" x2="3"  y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>`;
+    } else if (hour >= 17 && hour < 21) {
+      greeting = 'Good Evening';
+      // Crescent moon — universally recognised evening symbol
+      iconSvg = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+        style="display:inline-block;vertical-align:middle;margin-left:6px;"
+        stroke="rgba(232,201,106,0.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>`;
+    } else {
+      greeting = 'Good Night';
+      // Moon with stars
+      iconSvg = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+        style="display:inline-block;vertical-align:middle;margin-left:6px;"
+        stroke="rgba(232,201,106,0.95)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        <line x1="19" y1="3" x2="19" y2="5"/>
+        <line x1="18" y1="4" x2="20" y2="4"/>
+        <line x1="22" y1="6" x2="22" y2="8"/>
+        <line x1="21" y1="7" x2="23" y2="7"/>
+      </svg>`;
+    }
+
+    document.getElementById('heroGreeting').innerHTML = `${greeting}, Admin ${iconSvg}`;
 
     document.getElementById('heroDate').textContent = now.toLocaleDateString('en-KE', {
       weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
     });
+  }
+
+  /* ── Smart number formatter ── */
+  function formatStat(n) {
+    if (n >= 1_000_000) {
+      // Millions: always 2 decimal places (e.g. 2.12M, 10.50M)
+      return `${(n / 1_000_000).toFixed(2).replace(/\.?0+$/, '')}M`;
+    }
+    if (n >= 1_000) {
+      // Thousands: show enough precision to be meaningful
+      const k = n / 1_000;
+      if (k >= 100)      return `${Math.round(k)}K`;          // 100K, 500K, 999K
+      if (k >= 10)       return `${k.toFixed(0)}K`;           // 10K, 50K, 99K
+      return `${k.toFixed(1).replace(/\.0$/, '')}K`;          // 1.5K, 9.9K
+    }
+    return n.toLocaleString();                                 // < 1000: exact
   }
 
   function renderActivityList(activities) {
@@ -276,13 +325,13 @@
     const bCtx = document.getElementById('barChart').getContext('2d');
     const bg = bCtx.createLinearGradient(0,0,0,200);
     bg.addColorStop(0,'#1a3a5c'); bg.addColorStop(1,'rgba(26,58,92,0.35)');
-    new Chart(bCtx,{type:'bar',data:{labels:bL.slice(0,8),datasets:[{data:bV.slice(0,8),backgroundColor:bg,borderRadius:7,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f2847',titleColor:'#c9a84c',bodyColor:'rgba(255,255,255,0.8)',padding:9,cornerRadius:7,callbacks:{label:ctx=>` KES ${ctx.raw.toLocaleString()}`}}},scales:{x:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:10}}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#94a3b8',font:{size:10},callback:v=>v>=1000?`${(v/1000).toFixed(0)}K`:v}}}}});
+    new Chart(bCtx,{type:'bar',data:{labels:bL,datasets:[{data:bV,backgroundColor:bg,borderRadius:7,borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#0f2847',titleColor:'#c9a84c',bodyColor:'rgba(255,255,255,0.8)',padding:9,cornerRadius:7,callbacks:{label:ctx=>` KES ${ctx.raw.toLocaleString()}`}}},scales:{x:{grid:{display:false},ticks:{color:'#94a3b8',font:{size:9},maxRotation:45,minRotation:30}},y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#94a3b8',font:{size:10},callback:v=>v>=1000000?`${(v/1000000).toFixed(1)}M`:v>=1000?`${(v/1000).toFixed(0)}K`:v}}}}});
   }
 
   function renderClassBars(data) {
     const el = document.getElementById('classBars');
     if (!data.length) { el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted);font-size:.84rem;">No fee data yet</div>`; return; }
-    el.innerHTML = data.slice(0,8).map(c=>`<div class="class-row"><div class="class-name">${c.name}</div><div class="class-bar-bg"><div class="class-bar-fill" style="width:${c.pct}%"></div></div><div class="class-pct">${c.pct}%</div></div>`).join('');
+    el.innerHTML = data.map(c=>`<div class="class-row"><div class="class-name">${c.name}</div><div class="class-bar-bg"><div class="class-bar-fill" style="width:${c.pct}%"></div></div><div class="class-pct">${c.pct}%</div></div>`).join('');
   }
 
   async function loadDashboard() {
@@ -298,7 +347,7 @@
     const today = new Date().toISOString().split('T')[0];
     const { data: tp } = await supabase.from('payments').select('amount').eq('payment_date', today);
     const tt = (tp || []).reduce((s, p) => s + Number(p.amount), 0);
-    document.getElementById('statToday').textContent = tt >= 1000 ? `${(tt / 1000).toFixed(1)}K` : tt.toLocaleString();
+    document.getElementById('statToday').textContent = formatStat(tt);
 
     const { count: sc } = await supabase.from('sms_history').select('*', { count: 'exact', head: true });
     document.getElementById('statSMS').textContent = sc?.toLocaleString() ?? '0';
@@ -357,8 +406,7 @@
     });
 
     const outstanding = Math.max(0, tExp - tPaid);
-    document.getElementById('statOutstanding').textContent =
-      outstanding >= 1000 ? `${(outstanding / 1000).toFixed(0)}K` : outstanding.toLocaleString();
+    document.getElementById('statOutstanding').textContent = formatStat(outstanding);
 
     const pct = tExp > 0 ? Math.round((tPaid / tExp) * 100) : 0;
     document.getElementById('pctBadge').textContent  = `${pct}%`;
@@ -397,7 +445,7 @@
       }, 0);
       if (!exp) return { name: c.name, pct: 0 };
       return { name: c.name, pct: Math.round((paid / exp) * 100) };
-    }).filter(c => c.pct > 0);
+    });
 
     /* ── Recent activity ── */
     const recent = [...(payments || [])]
