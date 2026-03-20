@@ -480,11 +480,19 @@
         ? `${p.learners.first_name} ${p.learners.last_name}`
         : 'Unknown';
       const dt = new Date(p.created_at);
+      // Always render in EAT (Africa/Nairobi, UTC+3) — Supabase stores in UTC
+      const dateStr = dt.toLocaleDateString('en-KE', {
+        timeZone: 'Africa/Nairobi',
+        month: 'short', day: 'numeric', year: 'numeric'
+      });
+      const timeStr = dt.toLocaleTimeString('en-KE', {
+        timeZone: 'Africa/Nairobi',
+        hour: '2-digit', minute: '2-digit'
+      });
       return {
         name,
         amount: Number(p.amount),
-        time: dt.toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: 'numeric' })
-             + ' · ' + dt.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })
+        time: `${dateStr} · ${timeStr}`
       };
     });
 
