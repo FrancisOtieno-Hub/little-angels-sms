@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>SMS Management | Little Angels Academy</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +23,10 @@
     .badge-green { background:#dcfce7;color:#166534;padding:2px 9px;border-radius:20px;font-size:.7rem;font-weight:600; }
     @media(max-width:768px){.sms-action-grid{grid-template-columns:1fr;}}
   </style>
+  <script type="module">
+    import { SCHOOL } from './js/school-config.js';
+    document.title = `SMS Management | ${SCHOOL.name}`;
+  </script>
 </head>
 <body>
 <div class="app-shell">
@@ -76,14 +80,7 @@
           <select id="feeClassFilter"><option value="">All Classes</option></select>
           <select id="feeBalanceFilter"><option value="all">All Learners</option><option value="with_balance">Only With Balance</option><option value="overpaid">Only Overpaid</option></select>
         </div>
-        <textarea id="feeReminderTemplate" rows="6" placeholder="Message template — use {{name}}, {{admission_no}}, {{balance}}, {{term}}">Dear parent/guardian of {{name}} ({{admission_no}}),
-
-Your child has a fee balance of KES {{balance}} for {{term}}.
-
-Please clear the balance at your earliest convenience.
-
-Thank you.
-- Little Angels Academy</textarea>
+        <textarea id="feeReminderTemplate" rows="6" placeholder="Message template — use {{name}}, {{admission_no}}, {{balance}}, {{term}}"></textarea>
         <div style="display:flex;gap:10px;">
           <button id="previewFeeRecipientsBtn" class="btn btn-secondary">Preview Recipients</button>
           <button id="sendFeeRemindersBtn" class="btn btn-primary hidden">Send to All</button>
@@ -102,12 +99,7 @@ Thank you.
       <h2>General Message</h2>
       <div style="display:grid;gap:12px;">
         <select id="generalClassFilter"><option value="">All Classes</option></select>
-        <textarea id="generalMessageText" rows="5" placeholder="Type your message here…">Dear parent/guardian,
-
-
-
-Thank you.
-- Little Angels Academy</textarea>
+        <textarea id="generalMessageText" rows="5" placeholder="Type your message here…"></textarea>
         <div style="display:flex;gap:10px;">
           <button id="previewGeneralRecipientsBtn" class="btn btn-secondary">Preview Recipients</button>
           <button id="sendGeneralMessageBtn" class="btn btn-primary hidden">Send to All</button>
@@ -156,8 +148,28 @@ Thank you.
 </div>
 <script type="module">
   import { injectShell } from "./js/sidebar.js";
+  import { SCHOOL } from "./js/school-config.js";
   injectShell({ pageTitle: 'SMS Management', activePage: 'sms' });
-</script>
+
+  // Populate default SMS templates with school name from config
+  document.getElementById('feeReminderTemplate').value =
+`Dear parent/guardian of {{name}} ({{admission_no}}),
+
+Your child has a fee balance of KES {{balance}} for {{term}}.
+
+Please clear the balance at your earliest convenience.
+
+Thank you.
+- ${SCHOOL.name}`;
+
+  document.getElementById('generalMessageText').value =
+`Dear parent/guardian,
+
+
+
+Thank you.
+- ${SCHOOL.name}`;
+
 <script type="module" src="js/sms.js"></script>
 </body>
 </html>
