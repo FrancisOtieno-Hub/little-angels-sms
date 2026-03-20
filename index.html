@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Little Angels Academy | School Management System</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -668,13 +668,13 @@
 
       <!-- Headline -->
       <div class="headline">
-        <h1>Little Angels Academy</h1>
+        <h1 id="loginSchoolName"></h1>
         <div class="divider">
           <div class="divider-line"></div>
           <div class="divider-diamond"></div>
           <div class="divider-line right"></div>
         </div>
-        <p class="motto">Quality Education · Service · Discipline</p>
+        <p class="motto" id="loginMotto"></p>
       </div>
 
       <!-- Alert -->
@@ -748,8 +748,8 @@
 
       <!-- Footer -->
       <footer class="card-footer">
-        <p>P.O. Box 7093, Thika</p>
-        <p><a href="tel:0720985433" class="contact-link">Tel: 0720 985 433</a></p>
+        <p id="loginPoBox"></p>
+        <p><a id="loginPhone" class="contact-link"></a></p>
       </footer>
 
     </div><!-- /login-card -->
@@ -763,6 +763,17 @@
 
   <script type="module">
     import { supabase } from "./js/supabase.js";
+    import { SCHOOL } from "./js/school-config.js";
+
+    /* ── Populate config-driven fields ── */
+    document.getElementById('loginSchoolName').textContent = SCHOOL.name;
+    document.getElementById('loginMotto').textContent      = SCHOOL.motto;
+    document.getElementById('loginPoBox').textContent      = SCHOOL.poBox;
+    document.title = `${SCHOOL.name} | ${SCHOOL.systemName}`;
+
+    const phoneEl = document.getElementById('loginPhone');
+    phoneEl.textContent = `Tel: ${SCHOOL.phone}`;
+    phoneEl.href        = SCHOOL.phoneLink;
 
     /* ── Password visibility toggle ── */
     const pwdInput  = document.getElementById('password');
