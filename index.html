@@ -296,107 +296,130 @@
       margin-bottom: 8px;
     }
 
-    /* Wrapper is the positioning context for icon + toggle */
+    /* ── Field wrapper: fixed height, stacking context ── */
     .field-wrap {
       position: relative;
-      display: flex;
-      align-items: center;
+      height: 50px;              /* single source of truth for all heights */
     }
 
-    /* Icon: flex-centered inside the wrapper, not absolutely-positioned */
+    /* ── Icon: absolutely fills left column, uses flex to dead-centre the SVG ── */
     .field-icon {
       position: absolute;
       left: 0;
       top: 0;
-      bottom: 0;
-      width: 46px;               /* touch target width */
+      width: 48px;
+      height: 100%;             /* inherits wrapper height — no top/bottom math */
       display: flex;
       align-items: center;
       justify-content: center;
       pointer-events: none;
-      opacity: 0.45;
+      opacity: 0.5;
       transition: opacity 0.25s;
-      flex-shrink: 0;
+      z-index: 2;               /* sits above the input so autofill can't bury it */
     }
 
-    /* The actual SVG inside the icon wrapper */
     .field-icon svg {
-      display: block;            /* removes inline descender gap */
+      display: block;
       width: 15px;
       height: 15px;
       flex-shrink: 0;
     }
 
     .field-wrap:focus-within .field-icon {
-      opacity: 0.85;
+      opacity: 0.9;
     }
 
+    /* ── Input: fills the wrapper, padding carves space for icons ── */
     .field-input {
+      position: absolute;        /* sit inside wrapper at exact wrapper dimensions */
+      inset: 0;
       width: 100%;
-      padding: 0 16px 0 46px;    /* vertical padding handled by height */
-      height: 48px;              /* fixed height = perfectly centred text */
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.12);
+      height: 100%;
+      padding: 0 16px 0 48px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.13);
       border-radius: 12px;
       color: var(--text-light);
       font-family: 'DM Sans', sans-serif;
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 300;
       letter-spacing: 0.02em;
-      line-height: 1;            /* prevents browser line-height shifting text */
       outline: none;
-      transition: all 0.3s ease;
+      transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
       -webkit-appearance: none;
       box-sizing: border-box;
+      /* Vertically centred text via flex internals on modern browsers */
+      display: flex;
+      align-items: center;
+      z-index: 1;
     }
 
     .field-input::placeholder {
-      color: rgba(255,255,255,0.28);
-      font-size: 0.9rem;
+      color: rgba(255,255,255,0.30);
+      font-size: 0.88rem;
       font-weight: 300;
-      line-height: 1;
     }
 
-    /* Password field needs extra right-padding for the eye toggle */
+    /* Password right-padding for eye toggle */
     #password.field-input {
-      padding-right: 46px;
+      padding-right: 48px;
     }
 
     .field-input:focus {
-      background: rgba(255,255,255,0.1);
-      border-color: rgba(201,168,76,0.5);
+      background: rgba(255,255,255,0.11);
+      border-color: rgba(201,168,76,0.55);
       box-shadow:
-        0 0 0 3px rgba(201,168,76,0.1),
+        0 0 0 3px rgba(201,168,76,0.10),
         inset 0 1px 0 rgba(255,255,255,0.06);
     }
 
-    /* Password toggle — mirror the icon approach on the right side */
+    /* ── Autofill override: prevent browser gold/blue wash from covering icons ──
+       WebKit injects an inset box-shadow and changes text colour on autofill.
+       We override both so the input stays dark and the icons (z-index:2) stay visible. */
+    .field-input:-webkit-autofill,
+    .field-input:-webkit-autofill:hover,
+    .field-input:-webkit-autofill:focus,
+    .field-input:-webkit-autofill:active {
+      -webkit-box-shadow:
+        0 0 0 1000px rgba(15, 40, 71, 0.85) inset,  /* dark fill — matches card bg */
+        0 0 0 1px rgba(201,168,76,0.3);              /* subtle gold border hint */
+      box-shadow:
+        0 0 0 1000px rgba(15, 40, 71, 0.85) inset,
+        0 0 0 1px rgba(201,168,76,0.3);
+      -webkit-text-fill-color: rgba(255,255,255,0.92) !important; /* keep text light */
+      caret-color: rgba(255,255,255,0.92);
+      border-color: rgba(201,168,76,0.35) !important;
+      transition: background-color 9999s ease-in-out 0s; /* delay browser colour takeover */
+    }
+
+    /* ── Password toggle: mirrors icon — same height, right side ── */
     .pwd-toggle {
       position: absolute;
       right: 0;
       top: 0;
-      bottom: 0;
-      width: 46px;
+      width: 48px;
+      height: 100%;             /* inherits wrapper height */
       display: flex;
       align-items: center;
       justify-content: center;
       background: none;
       border: none;
       cursor: pointer;
-      opacity: 0.35;
+      opacity: 0.40;
       transition: opacity 0.2s;
       padding: 0;
       color: white;
+      z-index: 2;               /* above input so autofill can't cover it */
     }
 
     .pwd-toggle svg {
-      display: block;            /* removes inline descender gap */
+      display: block;
       width: 16px;
       height: 16px;
       flex-shrink: 0;
     }
 
-    .pwd-toggle:hover { opacity: 0.7; }
+    .pwd-toggle:hover { opacity: 0.8; }
 
     /* ──────────────────────────────────────────────
        REMEMBER / FORGOT ROW
@@ -417,22 +440,21 @@
       user-select: none;
     }
 
-    /* Custom checkbox — replaces inconsistent native rendering */
+    /* ── Custom checkbox ── */
     .remember input[type="checkbox"] {
       appearance: none;
       -webkit-appearance: none;
       width: 16px;
       height: 16px;
-      min-width: 16px;           /* prevents flex squishing */
+      min-width: 16px;
+      flex-shrink: 0;
       border-radius: 4px;
-      border: 1.5px solid rgba(255,255,255,0.25);
-      background: rgba(255,255,255,0.06);
+      border: 1.5px solid rgba(255,255,255,0.28);
+      background: rgba(255,255,255,0.07);
       cursor: pointer;
       position: relative;
-      flex-shrink: 0;
-      transition: all 0.2s ease;
-      margin: 0;                 /* reset any browser margin */
-      vertical-align: middle;
+      transition: all 0.18s ease;
+      margin: 0;
     }
 
     .remember input[type="checkbox"]:checked {
@@ -440,18 +462,20 @@
       border-color: var(--gold);
     }
 
-    /* Checkmark tick */
+    /* ── Tick: use inset+margin:auto to dead-centre the checkmark ── */
     .remember input[type="checkbox"]:checked::after {
       content: '';
       position: absolute;
+      /* Centre the tick by calculating exact pixel offsets for a 16×16 box */
       left: 4px;
-      top: 1.5px;
-      width: 5px;
-      height: 9px;
+      top: 2px;
+      width: 6px;               /* tick arm widths */
+      height: 10px;
       border: 2px solid #0f2847;
       border-top: none;
       border-left: none;
-      transform: rotate(45deg);
+      transform: rotate(43deg) scale(0.85);
+      transform-origin: center;
     }
 
     .remember input[type="checkbox"]:focus-visible {
