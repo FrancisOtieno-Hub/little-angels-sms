@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { SCHOOL } from "./school-config.js";
 
 const classFilter = document.getElementById("classFilter");
 const statusFilter = document.getElementById("statusFilter");
@@ -553,7 +554,7 @@ document.getElementById("exportClassSummaryXlsxBtn").addEventListener("click", (
 
   // Add metadata sheet
   const meta = XLSX.utils.aoa_to_sheet([
-    ['Little Angels Academy'],
+    [[SCHOOL.name]],
     ['Fee Collection Summary by Class'],
     [`Term: Year ${activeTerm.year} - Term ${activeTerm.term}`],
     [`Generated: ${new Date().toLocaleString()}`]
@@ -595,7 +596,7 @@ document.getElementById("exportLearnersXlsxBtn").addEventListener("click", () =>
 
   // Add metadata sheet
   const meta = XLSX.utils.aoa_to_sheet([
-    ['Little Angels Academy'],
+    [[SCHOOL.name]],
     ['Individual Learner Fee Report'],
     [`Term: Year ${activeTerm.year} - Term ${activeTerm.term}`],
     [`Generated: ${new Date().toLocaleString()}`]
