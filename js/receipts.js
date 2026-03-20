@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { SCHOOL, SCHOOL_CONTACT_LINE, SCHOOL_RECEIPT_DISCLAIMER } from "./school-config.js";
 
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("receiptSearch");
@@ -474,12 +475,12 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
         <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
         <div style="text-align: center; flex: 1; margin: 0 10px;">
-          <h1 style="margin: 0;">LITTLE ANGELS ACADEMY</h1>
+          <h1 style="margin: 0;">${SCHOOL.name.toUpperCase()}</h1>
           <p class="motto" style="margin: 2px 0;">Quality Education, Service and Discipline</p>
         </div>
         <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
       </div>
-      <p class="contact" style="margin: 2px 0;">P.O. Box 7093, Thika | Tel: 0720 985 433</p>
+      <p class="contact" style="margin: 2px 0;">${SCHOOL_CONTACT_LINE}</p>
     </div>
     
     <div class="receipt-body">
@@ -544,7 +545,7 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
     
     <div class="receipt-footer">
       <p><strong>Thank you for your payment</strong></p>
-      <p>This is an official receipt from Little Angels Academy. Please retain for your records.</p>
+      <p>${SCHOOL_RECEIPT_DISCLAIMER}</p>
       <p>Printed: ${new Date().toLocaleString('en-US', { 
         year: 'numeric', 
         month: 'long', 
@@ -858,12 +859,12 @@ function renderAllReceipts(feeInfoResults, term) {
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
           <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
           <div style="text-align: center; flex: 1; margin: 0 10px;">
-            <h1 style="margin: 0;">LITTLE ANGELS ACADEMY</h1>
+            <h1 style="margin: 0;">${SCHOOL.name.toUpperCase()}</h1>
             <p class="motto" style="margin: 2px 0;">Quality Education, Service and Discipline</p>
           </div>
           <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
         </div>
-        <p class="contact" style="margin: 2px 0;">P.O. Box 7093, Thika | Tel: 0720 985 433</p>
+        <p class="contact" style="margin: 2px 0;">${SCHOOL_CONTACT_LINE}</p>
       </div>
 
       <div class="receipt-body">
@@ -928,7 +929,7 @@ function renderAllReceipts(feeInfoResults, term) {
 
       <div class="receipt-footer">
         <p><strong>Thank you for your payment</strong></p>
-        <p>This is an official receipt from Little Angels Academy. Please retain for your records.</p>
+        <p>${SCHOOL_RECEIPT_DISCLAIMER}</p>
         <p>Printed: ${new Date().toLocaleString('en-US', { 
           year: 'numeric', 
           month: 'long', 
