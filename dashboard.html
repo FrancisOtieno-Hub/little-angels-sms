@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
   <title>Dashboard | Little Angels Academy</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -372,50 +372,85 @@
       return;
     }
 
-    /* ── Fetch all data for active term in parallel ── */
-    const [
-      { data: fees },
-      { data: customFees },
-      { data: payments },
-      { data: learners },
-      { data: classes }
-    ] = await Promise.all([
-      supabase.from('fees').select('class_id, amount').eq('term_id', term.id),
-      supabase.from('custom_fees').select('learner_id, custom_amount').eq('term_id', term.id),
-      supabase.from('payments').select('learner_id, amount, payment_date, created_at').eq('term_id', term.id),
-      supabase.from('learners').select('id, class_id, first_name, last_name').eq('active', true),
-      supabase.from('classes').select('id, name, level').order('level')
+    /* ── Fetch all data mirroring fee-reports.js exactly ──
+       fee-reports.js is the source of truth — all calculations must match it. */
+
+    // Step 1: All active learners (same query as fee-reports.js)
+    const { data: learners } = await supabase
+      .from('learners')
+      .select('id, class_id, first_name, last_name, classes(id, name, level)')
+      .eq('active', true)
+      .order('classes(level)', { ascending: true });
+
+    const { data: classes } = await supabase
+      .from('classes').select('id, name, level').order('level');
+
+    if (!learners || !learners.length) {
+      document.getElementById('statOutstanding').textContent = '—';
+      renderActivityList([]);
+      renderCharts([], [], 0, 0, 0, [], []);
+      renderClassBars([]);
+      return;
+    }
+
+    // Step 2: Chunk fetcher — same as fee-reports.js to avoid 1000-row Supabase limit
+    async function fetchInChunks(table, selectCols, filterCol, ids, extraFilters = {}) {
+      const CHUNK = 100;
+      const results = [];
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        let query = supabase.from(table).select(selectCols).in(filterCol, ids.slice(i, i + CHUNK));
+        for (const [col, val] of Object.entries(extraFilters)) query = query.eq(col, val);
+        const { data } = await query;
+        if (data) results.push(...data);
+      }
+      return results;
+    }
+
+    const learnerIds = learners.map(l => l.id);
+    const classIds   = [...new Set(learners.map(l => l.class_id))];
+
+    // Step 3: Class fees, custom fees, payments — all chunked like fee-reports.js
+    const [allClassFees, allCustomFees, allPayments] = await Promise.all([
+      supabase.from('fees').select('class_id, amount').eq('term_id', term.id).in('class_id', classIds)
+        .then(r => r.data || []),
+      fetchInChunks('custom_fees', 'learner_id, custom_amount', 'learner_id', learnerIds, { term_id: term.id }),
+      fetchInChunks('payments', 'learner_id, amount, payment_date', 'learner_id', learnerIds, { term_id: term.id })
     ]);
 
-    /* ── Build lookup maps ── */
-    // Standard fee per class
-    const feeMap = {};
-    (fees || []).forEach(f => { feeMap[f.class_id] = Number(f.amount); });
+    // Step 4: Build lookup maps — identical to fee-reports.js
+    const classFeeMap = {};
+    allClassFees.forEach(f => { classFeeMap[f.class_id] = Number(f.amount); });
 
-    // Custom fee per learner (overrides class fee when present)
     const customFeeMap = {};
-    (customFees || []).forEach(cf => { customFeeMap[cf.learner_id] = Number(cf.custom_amount); });
+    allCustomFees.forEach(cf => { customFeeMap[cf.learner_id] = Number(cf.custom_amount); });
 
-    // Total paid per learner this term
-    const paidMap = {};
-    (payments || []).forEach(p => { paidMap[p.learner_id] = (paidMap[p.learner_id] || 0) + Number(p.amount); });
-
-    /* ── Calculate outstanding, using custom fees where they exist ── */
-    let tExp = 0, tPaid = 0, cP = 0, cPart = 0, cU = 0;
-    (learners || []).forEach(l => {
-      // Use custom fee if set, otherwise fall back to class fee
-      const fee  = (l.id in customFeeMap) ? customFeeMap[l.id] : (feeMap[l.class_id] || 0);
-      const paid = paidMap[l.id] || 0;
-
-      tExp  += fee;
-      // Credit paid up to the expected amount (prevents overpayment inflating "collected")
-      tPaid += Math.min(paid, fee);
-
-      if (!fee) return; // skip learners with no fee assigned
-      if (paid >= fee)     cP++;
-      else if (paid > 0)   cPart++;
-      else                 cU++;
+    const paymentsMap = {};
+    allPayments.forEach(p => {
+      if (!paymentsMap[p.learner_id]) paymentsMap[p.learner_id] = [];
+      paymentsMap[p.learner_id].push(p);
     });
+
+    // Step 5: Per-learner calculations — exactly fee-reports.js logic (NO Math.min cap)
+    let tExp = 0, tPaid = 0, cP = 0, cPart = 0, cU = 0;
+
+    for (const learner of learners) {
+      const totalFees = (learner.id in customFeeMap)
+        ? customFeeMap[learner.id]
+        : (classFeeMap[learner.class_id] ?? 0);
+
+      const payments  = paymentsMap[learner.id] || [];
+      const totalPaid = payments.reduce((s, p) => s + Number(p.amount), 0);
+      const balance   = totalFees - totalPaid;
+
+      tExp  += totalFees;
+      tPaid += totalPaid;
+
+      if (!totalFees) continue;
+      // Match fee-reports.js status logic exactly
+      if (balance === 0)       cP++;
+      else if (totalPaid > 0)  cPart++;
+      else                     cU++;
+    }
 
     const outstanding = Math.max(0, tExp - tPaid);
     document.getElementById('statOutstanding').textContent = formatStat(outstanding);
@@ -424,9 +459,9 @@
     document.getElementById('pctBadge').textContent  = `${pct}%`;
     document.getElementById('pctCenter').textContent = `${pct}%`;
 
-    /* ── Monthly trend ── */
+    /* ── Monthly trend (payment_date grouped by month, same as fee-reports) ── */
     const mMap = {};
-    (payments || []).forEach(p => {
+    allPayments.forEach(p => {
       const m = p.payment_date?.slice(0, 7);
       if (m) mMap[m] = (mMap[m] || 0) + Number(p.amount);
     });
@@ -437,26 +472,35 @@
     });
     const mV = months.map(m => mMap[m]);
 
-    /* ── Class payment bar chart ── */
+    /* ── Class payment bar chart (total collected per class) ── */
     const cpMap = {};
-    (payments || []).forEach(p => {
-      const l = (learners || []).find(x => x.id === p.learner_id);
+    allPayments.forEach(p => {
+      const l = learners.find(x => x.id === p.learner_id);
       if (l) cpMap[l.class_id] = (cpMap[l.class_id] || 0) + Number(p.amount);
     });
     const bL = (classes || []).map(c => c.name);
     const bV = (classes || []).map(c => cpMap[c.id] || 0);
 
-    /* ── Class collection rate (also uses custom fees) ── */
+    /* ── Class collection rate — mirrors fee-reports.js generateClassSummary() ── */
+    const classSummary = {};
+    for (const learner of learners) {
+      const cid = learner.class_id;
+      if (!classSummary[cid]) {
+        const cls = learner.classes;
+        classSummary[cid] = { name: cls?.name || '?', total_expected: 0, total_paid: 0 };
+      }
+      const totalFees = (learner.id in customFeeMap)
+        ? customFeeMap[learner.id]
+        : (classFeeMap[cid] ?? 0);
+      const totalPaid = (paymentsMap[learner.id] || []).reduce((s, p) => s + Number(p.amount), 0);
+      classSummary[cid].total_expected += totalFees;
+      classSummary[cid].total_paid     += totalPaid;
+    }
+
     const classComp = (classes || []).map(c => {
-      const cl  = (learners || []).filter(l => l.class_id === c.id);
-      if (!cl.length) return { name: c.name, pct: 0 };
-      const exp  = cl.reduce((s, l) => s + ((l.id in customFeeMap) ? customFeeMap[l.id] : (feeMap[c.id] || 0)), 0);
-      const paid = cl.reduce((s, l) => {
-        const fee = (l.id in customFeeMap) ? customFeeMap[l.id] : (feeMap[c.id] || 0);
-        return s + Math.min(paidMap[l.id] || 0, fee);
-      }, 0);
-      if (!exp) return { name: c.name, pct: 0 };
-      return { name: c.name, pct: Math.round((paid / exp) * 100) };
+      const s = classSummary[c.id];
+      if (!s || !s.total_expected) return { name: c.name, pct: 0 };
+      return { name: c.name, pct: Math.round((s.total_paid / s.total_expected) * 100) };
     });
 
     /* ── Recent activity: dedicated query — newest first, term-independent ──
