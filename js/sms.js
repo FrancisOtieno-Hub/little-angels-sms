@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { SCHOOL } from "./school-config.js";
 
 /* ===========================
    HOSTPINNACLE API CONFIG
@@ -7,7 +8,7 @@ const HOSTPINNACLE_CONFIG = {
   apiUrl: 'https://sms.hostpinnacle.co.ke/api/services/sendsms/',
   apiKey: 'YOUR_API_KEY_HERE', // Replace with your actual API key
   partnerId: 'YOUR_PARTNER_ID_HERE', // Replace with your actual partner ID
-  shortcode: 'LITTLEANGELS' // Your registered shortcode
+  shortcode: SCHOOL.smsShortcode
 };
 
 /* ===========================
