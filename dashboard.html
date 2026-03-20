@@ -475,12 +475,13 @@
       .limit(10);
 
     const activities = (recentPayments || []).map(p => {
-      // Use the joined learner data directly — avoids dependency on the learners cache
       const name = p.learners
         ? `${p.learners.first_name} ${p.learners.last_name}`
         : 'Unknown';
+
+      // created_at is now timestamptz — parses correctly on every browser
       const dt = new Date(p.created_at);
-      // Always render in EAT (Africa/Nairobi, UTC+3) — Supabase stores in UTC
+
       const dateStr = dt.toLocaleDateString('en-KE', {
         timeZone: 'Africa/Nairobi',
         month: 'short', day: 'numeric', year: 'numeric'
