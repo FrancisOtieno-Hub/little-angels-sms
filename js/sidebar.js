@@ -160,11 +160,11 @@ export function injectShell({ pageTitle = '', activePage = '' } = {}) {
               <div class="avatar-dd-name">Administrator</div>
               <div class="avatar-dd-role">School Management</div>
             </div>
-            <button class="avatar-dd-item">
+            <button class="avatar-dd-item" id="profileBtn">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
               Profile
             </button>
-            <button class="avatar-dd-item">
+            <button class="avatar-dd-item" id="settingsBtn">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v2m0 16v2M4.22 4.22l1.42 1.42m12.72 12.72 1.42 1.42M2 12h2m16 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
               Settings
             </button>
@@ -287,6 +287,91 @@ export function injectShell({ pageTitle = '', activePage = '' } = {}) {
       avatarMenu.classList.toggle('open');
     });
     document.addEventListener('click', () => avatarMenu.classList.remove('open'));
+  }
+
+  /* ── Profile modal ── */
+  const profileModalHTML = `
+    <div class="modal hidden" id="profileModal">
+      <div class="modal-content" style="max-width:400px;">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;">
+          <div style="width:56px;height:56px;border-radius:14px;background:linear-gradient(135deg,var(--navy),var(--navy2));display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;font-weight:700;flex-shrink:0;" id="profileModalInitials">AD</div>
+          <div>
+            <div style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:700;color:var(--text-primary);">My Account</div>
+            <div style="font-size:0.78rem;color:var(--text-secondary);margin-top:2px;">School Management System</div>
+          </div>
+        </div>
+        <div style="background:var(--bg);border-radius:var(--radius-sm);padding:16px;display:flex;flex-direction:column;gap:12px;margin-bottom:24px;">
+          <div>
+            <div style="font-size:0.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Email Address</div>
+            <div style="font-size:0.9rem;color:var(--text-primary);font-weight:500;" id="profileModalEmail">—</div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Role</div>
+            <div style="font-size:0.9rem;color:var(--text-primary);font-weight:500;">Administrator</div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;">Last Sign In</div>
+            <div style="font-size:0.9rem;color:var(--text-primary);font-weight:500;" id="profileModalLastSeen">—</div>
+          </div>
+        </div>
+        <button id="profileModalClose" style="width:100%;padding:11px;border:1.5px solid var(--border);border-radius:var(--radius-xs);background:white;font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;color:var(--text-primary);cursor:pointer;transition:var(--transition);" onmouseover="this.style.borderColor='var(--navy2)'" onmouseout="this.style.borderColor='var(--border)'">Close</button>
+      </div>
+    </div>
+  `;
+  document.body.insertAdjacentHTML('beforeend', profileModalHTML);
+
+  /* ── Profile button ── */
+  const profileBtn   = document.getElementById('profileBtn');
+  const profileModal = document.getElementById('profileModal');
+  const profileClose = document.getElementById('profileModalClose');
+
+  if (profileBtn) {
+    profileBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      avatarMenu.classList.remove('open');
+
+      // Fetch current user from Supabase
+      const { supabase } = await import('./supabase.js');
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (user) {
+        const email    = user.email || '—';
+        const initials = email.slice(0, 2).toUpperCase();
+        const lastSeen = user.last_sign_in_at
+          ? new Date(user.last_sign_in_at).toLocaleString('en-KE', {
+              timeZone: 'Africa/Nairobi',
+              day: 'numeric', month: 'short', year: 'numeric',
+              hour: '2-digit', minute: '2-digit'
+            })
+          : '—';
+
+        document.getElementById('profileModalEmail').textContent    = email;
+        document.getElementById('profileModalInitials').textContent = initials;
+        document.getElementById('profileModalLastSeen').textContent = lastSeen;
+        document.getElementById('topbarAvatar').textContent         = initials;
+        document.querySelector('.avatar-dd-name').textContent       = email.split('@')[0];
+      }
+
+      profileModal.classList.remove('hidden');
+    });
+  }
+
+  if (profileClose) {
+    profileClose.addEventListener('click', () => profileModal.classList.add('hidden'));
+  }
+
+  // Close profile modal on backdrop click
+  profileModal.addEventListener('click', (e) => {
+    if (e.target === profileModal) profileModal.classList.add('hidden');
+  });
+
+  /* ── Settings button → fees.html (term & fees is the main system config) ── */
+  const settingsBtn = document.getElementById('settingsBtn');
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+      avatarMenu.classList.remove('open');
+      window.location.href = 'fees.html';
+    });
   }
 
   /* ── Logout ── */
