@@ -1,5 +1,4 @@
 import { supabase } from "./supabase.js";
-import { SCHOOL, SCHOOL_CONTACT_LINE, SCHOOL_RECEIPT_DISCLAIMER } from "./school-config.js";
 
 const searchBtn = document.getElementById("searchBtn");
 const searchInput = document.getElementById("receiptSearch");
@@ -245,13 +244,13 @@ async function loadPaymentsForLearner() {
       </div>
     `;
     
-    // Fetch payments
+    // Fetch payments — latest first so selection list and receipt show newest at top
     const { data: payments, error } = await supabase
       .from("payments")
       .select("*")
       .eq("learner_id", selectedLearner.id)
       .eq("term_id", term.id)
-      .order("payment_date");
+      .order("payment_date", { ascending: false });
     
     if (error) throw error;
     
@@ -398,10 +397,7 @@ generateReceiptBtn.addEventListener("click", async () => {
 
     if (customFeeData) {
       totalFees = Number(customFeeData.custom_amount);
-      feeInfo = {
-        type: customFeeData.fee_type,
-        reason: customFeeData.reason
-      };
+      feeInfo = { type: customFeeData.fee_type, reason: customFeeData.reason };
     } else {
       const { data: fee } = await supabase
         .from("fees")
@@ -409,14 +405,21 @@ generateReceiptBtn.addEventListener("click", async () => {
         .eq("class_id", selectedLearner.class_id)
         .eq("term_id", term.id)
         .maybeSingle();
-      
       totalFees = fee?.amount || 0;
     }
-    
-    const totalPaid = selectedPayments.reduce((s, p) => s + Number(p.amount), 0);
-    const balance = totalFees - totalPaid;
-    
-    renderReceipt(selectedLearner, term, selectedPayments, totalFees, totalPaid, balance, feeInfo);
+
+    // Balance = total fees minus ALL payments made this term (not just selected ones).
+    // Selected payments only determine what appears on the printed receipt.
+    const { data: allTermPayments } = await supabase
+      .from("payments")
+      .select("amount")
+      .eq("learner_id", selectedLearner.id)
+      .eq("term_id", term.id);
+
+    const totalPaidTerm = (allTermPayments || []).reduce((s, p) => s + Number(p.amount), 0);
+    const balance = totalFees - totalPaidTerm;
+
+    renderReceipt(selectedLearner, term, selectedPayments, totalFees, totalPaidTerm, balance, feeInfo);
     
     setTimeout(() => {
       window.print();
@@ -471,12 +474,12 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
         <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
         <div style="text-align: center; flex: 1; margin: 0 10px;">
-          <h1 style="margin: 0;">${SCHOOL.name.toUpperCase()}</h1>
+          <h1 style="margin: 0;">LITTLE ANGELS ACADEMY</h1>
           <p class="motto" style="margin: 2px 0;">Quality Education, Service and Discipline</p>
         </div>
         <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
       </div>
-      <p class="contact" style="margin: 2px 0;">${SCHOOL_CONTACT_LINE}</p>
+      <p class="contact" style="margin: 2px 0;">P.O. Box 7093, Thika | Tel: 0720 985 433</p>
     </div>
     
     <div class="receipt-body">
@@ -541,7 +544,7 @@ function renderReceipt(learner, term, payments, totalFees, totalPaid, balance, f
     
     <div class="receipt-footer">
       <p><strong>Thank you for your payment</strong></p>
-      <p>${SCHOOL_RECEIPT_DISCLAIMER}</p>
+      <p>This is an official receipt from Little Angels Academy. Please retain for your records.</p>
       <p>Printed: ${new Date().toLocaleString('en-US', { 
         year: 'numeric', 
         month: 'long', 
@@ -855,12 +858,12 @@ function renderAllReceipts(feeInfoResults, term) {
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px;">
           <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
           <div style="text-align: center; flex: 1; margin: 0 10px;">
-            <h1 style="margin: 0;">${SCHOOL.name.toUpperCase()}</h1>
+            <h1 style="margin: 0;">LITTLE ANGELS ACADEMY</h1>
             <p class="motto" style="margin: 2px 0;">Quality Education, Service and Discipline</p>
           </div>
           <img src="assets/logo.png" alt="School Logo" style="height: 45px; width: auto;" onerror="this.style.display='none'">
         </div>
-        <p class="contact" style="margin: 2px 0;">${SCHOOL_CONTACT_LINE}</p>
+        <p class="contact" style="margin: 2px 0;">P.O. Box 7093, Thika | Tel: 0720 985 433</p>
       </div>
 
       <div class="receipt-body">
@@ -925,7 +928,7 @@ function renderAllReceipts(feeInfoResults, term) {
 
       <div class="receipt-footer">
         <p><strong>Thank you for your payment</strong></p>
-        <p>${SCHOOL_RECEIPT_DISCLAIMER}</p>
+        <p>This is an official receipt from Little Angels Academy. Please retain for your records.</p>
         <p>Printed: ${new Date().toLocaleString('en-US', { 
           year: 'numeric', 
           month: 'long', 
