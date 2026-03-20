@@ -1222,6 +1222,12 @@ body.login-page {
   /* Hide search bar on small screens — save space */
   .topbar-search { display: none; }
 
+  /* Hide sidebar footer on mobile — unreliable at bottom of small screens */
+  .sidebar-footer { display: none; }
+
+  /* Remove bottom padding that was reserved for the footer */
+  .sidebar-nav { padding-bottom: 16px; }
+
   /* Page title in topbar shorter */
   .topbar-page-title {
     font-size: 0.95rem;
