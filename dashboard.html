@@ -479,12 +479,7 @@
         ? `${p.learners.first_name} ${p.learners.last_name}`
         : 'Unknown';
 
-      // Log the raw value so we can see exactly what Supabase returns
-      console.log('raw created_at:', p.created_at);
-
       const dt = new Date(p.created_at);
-      console.log('parsed Date:', dt.toString());
-
       const dateStr = dt.toLocaleDateString('en-KE', {
         timeZone: 'Africa/Nairobi',
         month: 'short', day: 'numeric', year: 'numeric'
