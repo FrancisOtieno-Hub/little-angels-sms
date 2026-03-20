@@ -1,6 +1,5 @@
 import { supabase } from "./supabase.js";
 
-console.log("=== FEE PAYMENTS PAGE LOADED ===");
 
 const searchInput = document.getElementById("searchInput");
 const autocompleteDropdown = document.getElementById("autocompleteDropdown");
@@ -20,7 +19,6 @@ let activeTerm = null;
 let autocompleteTimeout = null;
 let allLearners = [];
 
-console.log("Variables initialized");
 
 /* ===========================
    UTILITIES
@@ -76,7 +74,6 @@ async function loadActiveTerm() {
    AUTOCOMPLETE
 =========================== */
 async function loadAllLearners() {
-  console.log("Loading learners...");
   try {
     const { data, error } = await supabase
       .from("learners")
@@ -86,7 +83,6 @@ async function loadAllLearners() {
     
     if (error) throw error;
     allLearners = data || [];
-    console.log("Loaded", allLearners.length, "learners");
     return allLearners;
   } catch (error) {
     console.error("Error loading learners:", error);
@@ -132,7 +128,6 @@ function selectLearnerFromAutocomplete(learner) {
 function filterLearners(query) {
   if (!query || query.length < 2) return [];
   const searchQuery = query.toLowerCase();
-  console.log("Searching for:", searchQuery, "in", allLearners.length, "learners");
   
   return allLearners.filter(learner => {
     const fullName = `${learner.first_name} ${learner.last_name}`.toLowerCase();
@@ -160,7 +155,6 @@ searchInput.addEventListener('input', (e) => {
   
   autocompleteTimeout = setTimeout(() => {
     const results = filterLearners(query);
-    console.log("Found", results.length, "results");
     showAutocomplete(results);
   }, 300);
 });
@@ -357,16 +351,34 @@ async function loadPaymentHistory() {
     if (error) throw error;
 
     if (!data || data.length === 0) {
-      historyTable.innerHTML = '<tr><td colspan="3" class="text-center text-muted">No payments recorded yet</td></tr>';
+      historyTable.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No payments recorded yet</td></tr>';
       return;
     }
 
     data.forEach(p => {
+      const dateStr = new Date(p.payment_date + 'T00:00:00')
+        .toLocaleDateString('en-KE', { day: 'numeric', month: 'short', year: 'numeric' });
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${new Date(p.payment_date).toLocaleDateString()}</td>
-        <td>${p.reference_no || "-"}</td>
+        <td>${dateStr}</td>
+        <td>${p.reference_no || "—"}</td>
         <td>KES ${Number(p.amount).toLocaleString()}</td>
+        <td style="text-align:center;">
+          <div style="display:flex;gap:6px;justify-content:center;">
+            <button onclick="openEditPayment('${p.id}','${p.payment_date}','${p.reference_no || ''}',${p.amount})"
+              style="padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);background:white;cursor:pointer;font-size:.78rem;font-weight:600;color:var(--navy2);transition:all .2s;"
+              onmouseover="this.style.borderColor='var(--navy2)'"
+              onmouseout="this.style.borderColor='var(--border)'">
+              ✏️ Edit
+            </button>
+            <button onclick="deletePayment('${p.id}', ${p.amount})"
+              style="padding:5px 10px;border:1.5px solid var(--border);border-radius:var(--radius-xs);background:white;cursor:pointer;font-size:.78rem;font-weight:600;color:var(--danger);transition:all .2s;"
+              onmouseover="this.style.borderColor='var(--danger)'"
+              onmouseout="this.style.borderColor='var(--border)'">
+              🗑️ Delete
+            </button>
+          </div>
+        </td>
       `;
       historyTable.appendChild(tr);
     });
@@ -376,19 +388,99 @@ async function loadPaymentHistory() {
 }
 
 /* ===========================
+   EDIT PAYMENT
+=========================== */
+window.openEditPayment = function(id, date, refNo, amount) {
+  document.getElementById('editPaymentId').value   = id;
+  document.getElementById('editPaymentDate').value = date;
+  document.getElementById('editReferenceNo').value = refNo;
+  document.getElementById('editAmount').value      = amount;
+  document.getElementById('editPaymentModal').classList.remove('hidden');
+};
+
+document.getElementById('cancelEditPaymentBtn').addEventListener('click', () => {
+  document.getElementById('editPaymentModal').classList.add('hidden');
+});
+
+document.getElementById('editPaymentModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('editPaymentModal')) {
+    document.getElementById('editPaymentModal').classList.add('hidden');
+  }
+});
+
+document.getElementById('editPaymentForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const id     = document.getElementById('editPaymentId').value;
+  const date   = document.getElementById('editPaymentDate').value;
+  const refNo  = document.getElementById('editReferenceNo').value.trim();
+  const amount = parseFloat(document.getElementById('editAmount').value);
+
+  if (!date || !amount || amount <= 0) {
+    showAlert("Please fill in a valid date and amount.", "error");
+    return;
+  }
+
+  const saveBtn = document.getElementById('saveEditPaymentBtn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = 'Saving…';
+
+  try {
+    const { error } = await supabase
+      .from("payments")
+      .update({
+        payment_date: date,
+        reference_no: refNo || null,
+        amount:       amount
+      })
+      .eq("id", id);
+
+    if (error) throw error;
+
+    document.getElementById('editPaymentModal').classList.add('hidden');
+    showAlert(`✓ Payment updated successfully.`);
+    await displayLearnerDetails();
+    await loadPaymentHistory();
+  } catch (error) {
+    showAlert("Error updating payment: " + error.message, "error");
+  } finally {
+    saveBtn.disabled    = false;
+    saveBtn.textContent = 'Save Changes';
+  }
+});
+
+/* ===========================
+   DELETE PAYMENT
+=========================== */
+window.deletePayment = async function(id, amount) {
+  if (!confirm(`Are you sure you want to delete this payment of KES ${Number(amount).toLocaleString()}?\n\nThis cannot be undone.`)) return;
+
+  try {
+    const { error } = await supabase
+      .from("payments")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw error;
+
+    showAlert(`✓ Payment of KES ${Number(amount).toLocaleString()} deleted.`);
+    await displayLearnerDetails();
+    await loadPaymentHistory();
+  } catch (error) {
+    showAlert("Error deleting payment: " + error.message, "error");
+  }
+};
+
+/* ===========================
    INIT
 =========================== */
 async function initPage() {
-  console.log("Initializing page...");
   try {
     await checkAuth();
-    console.log("Auth OK");
     
     await loadActiveTerm();
-    console.log("Active term loaded");
     
     await loadAllLearners();
-    console.log("Page ready!");
   } catch (error) {
     console.error("Init error:", error);
   }
