@@ -194,6 +194,7 @@ a { text-decoration: none; color: inherit; }
 /* Nav items */
 .sidebar-nav {
   flex: 1;
+  min-height: 0;             /* critical: allows flex child to shrink below content size */
   overflow-y: auto;
   overflow-x: hidden;
   padding: 4px 10px;
@@ -288,7 +289,7 @@ a { text-decoration: none; color: inherit; }
 
 .sidebar-signature {
   font-size: 0.62rem;
-  color: rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.38);
   letter-spacing: 0.05em;
   text-align: center;
   line-height: 1.5;
