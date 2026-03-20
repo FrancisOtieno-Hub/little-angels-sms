@@ -1,4 +1,5 @@
 import { supabase } from "./supabase.js";
+import { SCHOOL } from "./school-config.js";
 
 const form = document.getElementById("learnerForm");
 const classSelect = document.getElementById("classSelect");
@@ -777,7 +778,7 @@ exportExcelBtn.addEventListener('click', async () => {
     
     // Generate filename with current date
     const today = new Date().toISOString().split('T')[0];
-    const filename = `LAA_Learners_${today}.xlsx`;
+    const filename = `${SCHOOL.abbreviation}_Learners_${today}.xlsx`;
     
     // Download the file
     XLSX.writeFile(wb, filename);
