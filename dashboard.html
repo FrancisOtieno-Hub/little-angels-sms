@@ -187,7 +187,7 @@
     <!-- BOTTOM ROW -->
     <div class="bottom-row">
       <div class="activity-wrap">
-        <div class="sec-hd" style="margin-bottom:10px;"><h2 class="sec-title" style="font-size:1rem;">Recent Activity</h2><span class="sec-link">View all</span></div>
+        <div class="sec-hd" style="margin-bottom:10px;"><h2 class="sec-title" style="font-size:1rem;">Recent Activity</h2><a href="fee-reports.html" class="sec-link">View all →</a></div>
         <div id="activityList"><div style="text-align:center;padding:20px;color:var(--text-muted);font-size:.84rem;">Loading…</div></div>
       </div>
       <div class="bar-wrap">
@@ -459,18 +459,31 @@
       return { name: c.name, pct: Math.round((paid / exp) * 100) };
     });
 
-    /* ── Recent activity ── */
-    const recent = [...(payments || [])]
-      .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-      .slice(0, 7);
-    const activities = recent.map(p => {
-      const l    = (learners || []).find(x => x.id === p.learner_id);
-      const name = l ? `${l.first_name} ${l.last_name}` : 'Unknown';
-      const dt   = new Date(p.created_at);
+    /* ── Recent activity: dedicated query — newest first, term-independent ──
+       Do NOT derive from the term payments array — that has no .order() and
+       may be capped by Supabase's default row limit. Query directly instead. */
+    const { data: recentPayments } = await supabase
+      .from('payments')
+      .select(`
+        learner_id,
+        amount,
+        payment_date,
+        created_at,
+        learners ( first_name, last_name )
+      `)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    const activities = (recentPayments || []).map(p => {
+      // Use the joined learner data directly — avoids dependency on the learners cache
+      const name = p.learners
+        ? `${p.learners.first_name} ${p.learners.last_name}`
+        : 'Unknown';
+      const dt = new Date(p.created_at);
       return {
         name,
         amount: Number(p.amount),
-        time: dt.toLocaleDateString('en-KE', { month: 'short', day: 'numeric' })
+        time: dt.toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: 'numeric' })
              + ' · ' + dt.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })
       };
     });
