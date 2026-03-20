@@ -119,10 +119,19 @@ export function injectShell({ pageTitle = '', activePage = '' } = {}) {
         </div>
       </div>
     </aside>
+
+    <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
   `;
 
   const topbarHTML = `
     <header class="topbar" id="appTopbar">
+      <!-- Hamburger: shown on mobile, injected here so it's always first in topbar -->
+      <button class="topbar-hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
       <div class="topbar-page-title">${pageTitle}</div>
 
       <div class="topbar-search">
@@ -167,13 +176,92 @@ export function injectShell({ pageTitle = '', activePage = '' } = {}) {
     </header>
   `;
 
-  // Inject into body (expects .app-shell to exist)
-  const sidebar = document.getElementById('appSidebar');
-  const topbar  = document.getElementById('appTopbar');
-  if (!sidebar) document.querySelector('.app-shell').insertAdjacentHTML('afterbegin', sidebarHTML);
-  if (!topbar)  document.querySelector('.app-shell').insertAdjacentHTML('afterbegin', topbarHTML);
+  /* ── Inject HTML ── */
+  const shell = document.querySelector('.app-shell');
+  if (!document.getElementById('appSidebar')) {
+    shell.insertAdjacentHTML('afterbegin', sidebarHTML);
+  }
+  if (!document.getElementById('appTopbar')) {
+    shell.insertAdjacentHTML('afterbegin', topbarHTML);
+  }
 
-  // Avatar dropdown toggle
+  /* ── Sidebar open/close logic ── */
+  const sidebar   = document.getElementById('appSidebar');
+  const backdrop  = document.getElementById('sidebarBackdrop');
+  const hamburger = document.getElementById('hamburgerBtn');
+
+  function openSidebar() {
+    sidebar.classList.add('open');
+    backdrop.classList.add('visible');
+    hamburger.classList.add('active');
+    hamburger.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';   /* prevent scroll-through */
+  }
+
+  function closeSidebar() {
+    sidebar.classList.remove('open');
+    backdrop.classList.remove('visible');
+    hamburger.classList.remove('active');
+    hamburger.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  /* Hamburger click */
+  if (hamburger) {
+    hamburger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+    });
+  }
+
+  /* Backdrop click closes sidebar */
+  if (backdrop) {
+    backdrop.addEventListener('click', closeSidebar);
+  }
+
+  /* Swipe-left to close on mobile */
+  let touchStartX = 0;
+  sidebar.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  sidebar.addEventListener('touchend', (e) => {
+    const diff = touchStartX - e.changedTouches[0].clientX;
+    if (diff > 60) closeSidebar();         /* swipe left 60px+ = close */
+  }, { passive: true });
+
+  /* Swipe-right from left edge to open */
+  document.addEventListener('touchstart', (e) => {
+    if (e.touches[0].clientX < 24) touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  document.addEventListener('touchend', (e) => {
+    const diff = e.changedTouches[0].clientX - touchStartX;
+    if (touchStartX < 24 && diff > 60 && !sidebar.classList.contains('open')) {
+      openSidebar();
+    }
+  }, { passive: true });
+
+  /* Auto-close sidebar when a nav item is tapped on mobile */
+  sidebar.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (window.innerWidth <= 768) closeSidebar();
+    });
+  });
+
+  /* Escape key closes sidebar */
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeSidebar();
+  });
+
+  /* On desktop, reset any mobile state if window is resized */
+  window.addEventListener('resize', () => {
+    if (window.innerWidth > 768) {
+      closeSidebar();
+    }
+  });
+
+  /* ── Avatar dropdown ── */
   const avatarBtn  = document.getElementById('topbarAvatar');
   const avatarMenu = document.getElementById('avatarDropdown');
   if (avatarBtn && avatarMenu) {
@@ -184,7 +272,7 @@ export function injectShell({ pageTitle = '', activePage = '' } = {}) {
     document.addEventListener('click', () => avatarMenu.classList.remove('open'));
   }
 
-  // Logout
+  /* ── Logout ── */
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
