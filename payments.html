@@ -55,14 +55,37 @@
     <!-- History -->
     <div class="card hidden" id="historyCard">
       <h2>Payment History</h2>
-      <div class="table-wrap">
+      <div class="table-wrap" style="max-height:360px;overflow-y:auto;">
         <table>
-          <thead><tr><th>Date</th><th>Reference No</th><th>Amount (KES)</th></tr></thead>
+          <thead style="position:sticky;top:0;z-index:10;background:var(--bg);">
+            <tr><th>Date</th><th>Reference No</th><th>Amount (KES)</th><th style="text-align:center;">Actions</th></tr>
+          </thead>
           <tbody id="paymentHistory"></tbody>
         </table>
       </div>
     </div>
   </main>
+</div>
+
+<!-- Edit Payment Modal -->
+<div class="modal hidden" id="editPaymentModal">
+  <div class="modal-content" style="max-width:440px;">
+    <h2 class="modal-title">Edit Payment</h2>
+    <p class="modal-subtitle">Correct the payment date, reference number or amount.</p>
+    <form id="editPaymentForm">
+      <input type="hidden" id="editPaymentId"/>
+      <label style="display:block;font-size:.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">Payment Date</label>
+      <input type="date" id="editPaymentDate" required/>
+      <label style="display:block;font-size:.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;margin-top:4px;">Reference No</label>
+      <input type="text" id="editReferenceNo" placeholder="Reference No (optional)"/>
+      <label style="display:block;font-size:.82rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;margin-top:4px;">Amount (KES)</label>
+      <input type="number" id="editAmount" placeholder="Amount" min="1" required/>
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button type="button" id="cancelEditPaymentBtn" class="btn btn-secondary" style="flex:1;">Cancel</button>
+        <button type="submit" id="saveEditPaymentBtn" class="btn btn-primary" style="flex:1;">Save Changes</button>
+      </div>
+    </form>
+  </div>
 </div>
 <script type="module">
   import { injectShell } from "./js/sidebar.js";
