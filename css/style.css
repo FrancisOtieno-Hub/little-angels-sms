@@ -1167,18 +1167,18 @@ body.login-page {
   }
 
   /* Show hamburger on mobile */
-  .topbar-hamburger { display: flex; }
+  .topbar-hamburger {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
     width: 38px;
     height: 38px;
     border-radius: var(--radius-xs);
     border: none;
     background: transparent;
     cursor: pointer;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
     flex-shrink: 0;
     padding: 0;
     color: var(--text-secondary);
