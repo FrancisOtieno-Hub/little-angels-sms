@@ -197,7 +197,7 @@ a { text-decoration: none; color: inherit; }
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 4px 10px 60px; /* bottom padding reserves space so footer never overlaps last nav item */
+  padding: 4px 10px calc(60px + env(safe-area-inset-bottom, 0px));
   scrollbar-width: none;
 }
 
@@ -209,8 +209,8 @@ a { text-decoration: none; color: inherit; }
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 12px;
-  background: var(--navy);          /* solid background so it sits cleanly over nav */
+  padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--navy);
   border-top: 1px solid rgba(255,255,255,0.07);
   z-index: 1;
 }
