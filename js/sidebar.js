@@ -219,25 +219,40 @@ export function injectShell({ pageTitle = '', activePage = '' } = {}) {
     backdrop.addEventListener('click', closeSidebar);
   }
 
-  /* Swipe-left to close on mobile */
-  let touchStartX = 0;
+  /* ── Swipe gestures — direction-aware ── */
+  let swipeStartX = 0;
+  let swipeStartY = 0;
+
+  /* Swipe-left to close: only when sidebar is already open */
   sidebar.addEventListener('touchstart', (e) => {
-    touchStartX = e.touches[0].clientX;
+    swipeStartX = e.touches[0].clientX;
+    swipeStartY = e.touches[0].clientY;
   }, { passive: true });
 
   sidebar.addEventListener('touchend', (e) => {
-    const diff = touchStartX - e.changedTouches[0].clientX;
-    if (diff > 60) closeSidebar();         /* swipe left 60px+ = close */
+    const dx = swipeStartX - e.changedTouches[0].clientX;
+    const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY);
+    /* Only close if horizontal movement dominates (not a scroll) */
+    if (dx > 60 && dx > dy * 1.5) closeSidebar();
   }, { passive: true });
 
-  /* Swipe-right from left edge to open */
+  /* Swipe-right from left edge to open: horizontal intent required */
   document.addEventListener('touchstart', (e) => {
-    if (e.touches[0].clientX < 24) touchStartX = e.touches[0].clientX;
+    swipeStartX = e.touches[0].clientX;
+    swipeStartY = e.touches[0].clientY;
   }, { passive: true });
 
   document.addEventListener('touchend', (e) => {
-    const diff = e.changedTouches[0].clientX - touchStartX;
-    if (touchStartX < 24 && diff > 60 && !sidebar.classList.contains('open')) {
+    const dx = e.changedTouches[0].clientX - swipeStartX;
+    const dy = Math.abs(e.changedTouches[0].clientY - swipeStartY);
+    /* Must start within 20px of left edge, move right 60px+,
+       and horizontal movement must clearly dominate vertical */
+    if (
+      swipeStartX < 20 &&
+      dx > 60 &&
+      dx > dy * 2 &&           /* angle must be more horizontal than diagonal */
+      !sidebar.classList.contains('open')
+    ) {
       openSidebar();
     }
   }, { passive: true });
