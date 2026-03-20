@@ -141,17 +141,29 @@ export function injectShell({ pageTitle = '', activePage = '' } = {}) {
           <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.4"/>
           <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
         </svg>
-        <input type="text" placeholder="Search learners, payments…" id="globalSearch" />
+        <input type="text" placeholder="Search learners, payments…" id="globalSearch" autocomplete="off"/>
+        <div class="global-search-results hidden" id="globalSearchResults"></div>
       </div>
 
       <div class="topbar-right">
-        <button class="topbar-icon-btn" title="Notifications">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-            <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-linecap="round"/>
-          </svg>
-          <div class="notif-dot"></div>
-        </button>
+        <div class="topbar-notif-wrap">
+          <button class="topbar-icon-btn" id="notifBtn" title="Notifications">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-linecap="round"/>
+            </svg>
+            <div class="notif-dot" id="notifDot"></div>
+          </button>
+          <div class="notif-dropdown" id="notifDropdown">
+            <div class="notif-dd-head">
+              <span>Recent Payments</span>
+              <a href="fee-reports.html" style="font-size:.72rem;color:var(--primary-light);text-decoration:none;font-weight:500;">View all →</a>
+            </div>
+            <div id="notifList">
+              <div class="notif-empty">Loading…</div>
+            </div>
+          </div>
+        </div>
 
         <div class="topbar-avatar-wrap">
           <div class="topbar-avatar" id="topbarAvatar">AD</div>
@@ -365,12 +377,215 @@ export function injectShell({ pageTitle = '', activePage = '' } = {}) {
     if (e.target === profileModal) profileModal.classList.add('hidden');
   });
 
-  /* ── Settings button → fees.html (term & fees is the main system config) ── */
+  /* ── Settings button → fees.html ── */
   const settingsBtn = document.getElementById('settingsBtn');
   if (settingsBtn) {
     settingsBtn.addEventListener('click', () => {
       avatarMenu.classList.remove('open');
       window.location.href = 'fees.html';
+    });
+  }
+
+  /* ═══════════════════════════════════════════════
+     GLOBAL SEARCH
+     Searches learners by name or admission number.
+     Shows matching learners AND their recent payments
+     in two grouped sections in the dropdown.
+  ═══════════════════════════════════════════════ */
+  const globalSearch  = document.getElementById('globalSearch');
+  const searchResults = document.getElementById('globalSearchResults');
+  let searchTimeout   = null;
+  let learnerCache    = null;   // cache learners for the session
+
+  async function fetchLearnersCache() {
+    if (learnerCache) return learnerCache;
+    const { supabase } = await import('./supabase.js');
+    const { data } = await supabase
+      .from('learners')
+      .select('id, admission_no, first_name, last_name, classes(name)')
+      .eq('active', true)
+      .order('first_name');
+    learnerCache = data || [];
+    return learnerCache;
+  }
+
+  async function fetchPaymentsForLearners(learnerIds) {
+    if (!learnerIds.length) return [];
+    const { supabase } = await import('./supabase.js');
+    // Chunk to avoid URL limits
+    const CHUNK = 50;
+    const results = [];
+    for (let i = 0; i < learnerIds.length; i += CHUNK) {
+      const { data } = await supabase
+        .from('payments')
+        .select('id, learner_id, amount, payment_date, reference_no, terms(year, term)')
+        .in('learner_id', learnerIds.slice(i, i + CHUNK))
+        .order('payment_date', { ascending: false })
+        .limit(30);
+      if (data) results.push(...data);
+    }
+    return results;
+  }
+
+  async function runSearch(q) {
+    const learners = await fetchLearnersCache();
+    const ql = q.toLowerCase();
+
+    const matched = learners.filter(l =>
+      `${l.first_name} ${l.last_name}`.toLowerCase().includes(ql) ||
+      l.admission_no.toLowerCase().includes(ql)
+    ).slice(0, 6);
+
+    if (!matched.length) {
+      searchResults.innerHTML = `<div class="gs-empty">No results for "<strong>${q}</strong>"</div>`;
+      searchResults.classList.remove('hidden');
+      return;
+    }
+
+    // Fetch payments for matched learners in parallel
+    const payments = await fetchPaymentsForLearners(matched.map(l => l.id));
+
+    // Group payments by learner id
+    const payMap = {};
+    payments.forEach(p => {
+      if (!payMap[p.learner_id]) payMap[p.learner_id] = [];
+      payMap[p.learner_id].push(p);
+    });
+
+    let html = '';
+
+    // ── Section 1: Learners ──
+    html += `<div class="gs-section-label">Learners</div>`;
+    html += matched.map(l => `
+      <a href="learners.html" class="gs-item">
+        <div class="gs-avatar">${l.first_name[0]}${l.last_name[0]}</div>
+        <div class="gs-info">
+          <div class="gs-name">${l.first_name} ${l.last_name}</div>
+          <div class="gs-meta">${l.admission_no} · ${l.classes?.name || '—'}</div>
+        </div>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color:var(--text-muted);flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
+      </a>
+    `).join('');
+
+    // ── Section 2: Payments ──
+    const allPayments = matched.flatMap(l =>
+      (payMap[l.id] || []).slice(0, 3).map(p => ({ ...p, learner: l }))
+    ).sort((a, b) => new Date(b.payment_date) - new Date(a.payment_date)).slice(0, 8);
+
+    if (allPayments.length) {
+      html += `<div class="gs-section-label" style="border-top:1px solid var(--border);margin-top:2px;padding-top:6px;">Payments</div>`;
+      html += allPayments.map(p => {
+        const termLabel = p.terms ? `Term ${p.terms.term} ${p.terms.year}` : '—';
+        const dateStr   = new Date(p.payment_date).toLocaleDateString('en-KE', {
+          timeZone: 'Africa/Nairobi', day: 'numeric', month: 'short', year: 'numeric'
+        });
+        const refLabel  = p.reference_no ? ` · Ref: ${p.reference_no}` : '';
+        return `
+          <a href="payments.html" class="gs-item gs-payment-item">
+            <div class="gs-pay-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+            </div>
+            <div class="gs-info">
+              <div class="gs-name">
+                KES ${Number(p.amount).toLocaleString()}
+                <span style="font-weight:400;color:var(--text-secondary);font-size:.78rem;"> — ${p.learner.first_name} ${p.learner.last_name}</span>
+              </div>
+              <div class="gs-meta">${dateStr} · ${termLabel}${refLabel}</div>
+            </div>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="color:var(--text-muted);flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
+          </a>
+        `;
+      }).join('');
+    }
+
+    searchResults.innerHTML = html;
+    searchResults.classList.remove('hidden');
+  }
+
+  function hideSearchResults() {
+    searchResults.classList.add('hidden');
+    searchResults.innerHTML = '';
+  }
+
+  if (globalSearch) {
+    globalSearch.addEventListener('input', (e) => {
+      const q = e.target.value.trim();
+      clearTimeout(searchTimeout);
+      if (q.length < 2) { hideSearchResults(); return; }
+      searchTimeout = setTimeout(() => runSearch(q), 280);
+    });
+
+    globalSearch.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { hideSearchResults(); globalSearch.blur(); }
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.topbar-search')) hideSearchResults();
+    });
+  }
+
+  /* ═══════════════════════════════════════════════
+     NOTIFICATIONS
+     Shows the 6 most recent payments across all
+     terms. Loads on first open, then stays cached.
+  ═══════════════════════════════════════════════ */
+  const notifBtn      = document.getElementById('notifBtn');
+  const notifDropdown = document.getElementById('notifDropdown');
+  const notifDot      = document.getElementById('notifDot');
+  let notifLoaded     = false;
+
+  async function loadNotifications() {
+    const { supabase } = await import('./supabase.js');
+    const { data } = await supabase
+      .from('payments')
+      .select('amount, payment_date, created_at, learners(first_name, last_name)')
+      .order('created_at', { ascending: false })
+      .limit(6);
+
+    const list = document.getElementById('notifList');
+    if (!data || !data.length) {
+      list.innerHTML = '<div class="notif-empty">No recent payments</div>';
+      notifDot.style.display = 'none';
+      return;
+    }
+
+    list.innerHTML = data.map(p => {
+      const name = p.learners ? `${p.learners.first_name} ${p.learners.last_name}` : 'Unknown';
+      const dt   = new Date(p.created_at);
+      const time = dt.toLocaleDateString('en-KE', {
+        timeZone: 'Africa/Nairobi', month: 'short', day: 'numeric'
+      }) + ' · ' + dt.toLocaleTimeString('en-KE', {
+        timeZone: 'Africa/Nairobi', hour: '2-digit', minute: '2-digit'
+      });
+      return `
+        <div class="notif-item">
+          <div class="notif-icon">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+          </div>
+          <div class="notif-body">
+            <div class="notif-title">${name}</div>
+            <div class="notif-sub">KES ${Number(p.amount).toLocaleString()} · ${time}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    notifLoaded = true;
+  }
+
+  if (notifBtn && notifDropdown) {
+    notifBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      avatarMenu.classList.remove('open');
+      hideSearchResults();
+
+      const isOpen = notifDropdown.classList.toggle('open');
+      if (isOpen && !notifLoaded) await loadNotifications();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.topbar-notif-wrap')) notifDropdown.classList.remove('open');
     });
   }
 
