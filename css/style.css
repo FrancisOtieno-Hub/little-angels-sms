@@ -194,14 +194,26 @@ a { text-decoration: none; color: inherit; }
 /* Nav items */
 .sidebar-nav {
   flex: 1;
-  min-height: 0;             /* critical: allows flex child to shrink below content size */
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 4px 10px;
+  padding: 4px 10px 60px; /* bottom padding reserves space so footer never overlaps last nav item */
   scrollbar-width: none;
 }
 
 .sidebar-nav::-webkit-scrollbar { display: none; }
+
+/* Sidebar footer — anchored to the bottom of the sidebar absolutely */
+.sidebar-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 12px;
+  background: var(--navy);          /* solid background so it sits cleanly over nav */
+  border-top: 1px solid rgba(255,255,255,0.07);
+  z-index: 1;
+}
 
 .nav-item {
   display: flex;
@@ -277,14 +289,6 @@ a { text-decoration: none; color: inherit; }
   padding: 2px 7px;
   border-radius: 10px;
   letter-spacing: 0.03em;
-}
-
-/* Sidebar footer */
-.sidebar-footer {
-  padding: 14px 12px;
-  border-top: 1px solid rgba(255,255,255,0.07);
-  flex-shrink: 0;
-  margin-top: auto;          /* push to bottom even if nav items are few */
 }
 
 .sidebar-signature {
